@@ -1,0 +1,65 @@
+{
+  "clientes": {
+    "cliente_1": {
+      "nome": "Ana Souza",
+      "email": "ana.souza@email.com",
+      "telefone": "(11) 98888-1111",
+      "cidade": "Sao Paulo"
+    },
+    "cliente_2": {
+      "nome": "Bruno Lima",
+      "email": "bruno.lima@email.com",
+      "telefone": "(21) 97777-2222",
+      "cidade": "Rio de Janeiro"
+    },
+    "cliente_3": {
+      "nome": "Carla Dias",
+      "email": "carla.dias@email.com",
+      "telefone": "(31) 96666-3333",
+      "cidade": "Belo Horizonte"
+    }
+  },
+  "produtos": {
+    "produto_1": {
+      "nome": "Teclado Mecanico",
+      "preco": 250.00,
+      "estoque": 15
+    },
+    "produto_2": {
+      "nome": "Mouse Gamer",
+      "preco": 120.00,
+      "estoque": 30
+    },
+    "produto_3": {
+      "nome": "Monitor 24 Polegadas",
+      "preco": 900.00,
+      "estoque": 8
+    }
+  },
+  "pedidos": {
+    "pedido_1": {
+      "cliente_id": 1,
+      "produto_id": 1,
+      "quantidade": 1,
+      "valor_total": 250.00,
+      "data_pedido": "2026-08-10 14:30:00",
+      "status": "Pago"
+    },
+    "pedido_2": {
+      "cliente_id": 2,
+      "produto_id": 3,
+      "quantidade": 1,
+      "valor_total": 900.00,
+      "data_pedido": "2026-08-12 09:15:00",
+      "status": "Enviado"
+    },
+    "pedido_3": {
+      "cliente_id": 3,
+      "produto_id": 2,
+      "quantidade": 2,
+      "valor_total": 240.00,
+      "data_pedido": "2026-08-15 16:45:00",
+      "status": "Entregue"
+    }
+  }
+}
