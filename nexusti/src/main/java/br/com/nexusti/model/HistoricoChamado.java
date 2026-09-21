@@ -1,17 +1,25 @@
 package br.com.nexusti.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class HistoricoChamado {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String mensagem;
     private String dataRegistro;
-    private int idChamado;
-    private int idUsuario;
+    private Integer idChamado;
+    private Integer idUsuario;
 
     public HistoricoChamado() {
     }
 
-    public HistoricoChamado(int id, String mensagem, String dataRegistro, int idChamado, int idUsuario) {
+    public HistoricoChamado(int id, String mensagem, String dataRegistro, Integer idChamado, Integer idUsuario) {
         this.id = id;
         this.mensagem = mensagem;
         this.dataRegistro = dataRegistro;
@@ -43,19 +51,19 @@ public class HistoricoChamado {
         this.dataRegistro = dataRegistro;
     }
 
-    public int getIdChamado() {
+    public Integer getIdChamado() {
         return idChamado;
     }
 
-    public void setIdChamado(int idChamado) {
+    public void setIdChamado(Integer idChamado) {
         this.idChamado = idChamado;
     }
 
-    public int getIdUsuario() {
+    public Integer getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(int idUsuario) {
+    public void setIdUsuario(Integer idUsuario) {
         this.idUsuario = idUsuario;
     }
 }

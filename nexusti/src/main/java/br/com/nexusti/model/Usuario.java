@@ -1,18 +1,26 @@
 package br.com.nexusti.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class Usuario {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String nome;
     private String email;
     private String senha;
     private String perfil;
-    private int idSetor;
+    private Integer idSetor;
 
     public Usuario() {
     }
 
-    public Usuario(int id, String nome, String email, String senha, String perfil, int idSetor) {
+    public Usuario(int id, String nome, String email, String senha, String perfil, Integer idSetor) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -61,11 +69,11 @@ public class Usuario {
         this.perfil = perfil;
     }
 
-    public int getIdSetor() {
+    public Integer getIdSetor() {
         return idSetor;
     }
 
-    public void setIdSetor(int idSetor) {
+    public void setIdSetor(Integer idSetor) {
         this.idSetor = idSetor;
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/historicos")
+@CrossOrigin(origins = "*")
 public class HistoricoChamadoController {
 
     @Autowired
@@ -26,6 +27,16 @@ public class HistoricoChamadoController {
     @PostMapping
     public HistoricoChamado criar(@RequestBody HistoricoChamado historico) {
         return service.salvar(historico);
+    }
+
+    @PutMapping("/{id}")
+    public HistoricoChamado atualizar(@PathVariable int id, @RequestBody HistoricoChamado dados) {
+        HistoricoChamado atual = service.buscarPorId(id);
+        atual.setMensagem(dados.getMensagem());
+        atual.setDataRegistro(dados.getDataRegistro());
+        atual.setIdChamado(dados.getIdChamado());
+        atual.setIdUsuario(dados.getIdUsuario());
+        return service.salvar(atual);
     }
 
     @DeleteMapping("/{id}")

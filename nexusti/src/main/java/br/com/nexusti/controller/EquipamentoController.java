@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipamentos")
+@CrossOrigin(origins = "*")
 public class EquipamentoController {
 
     @Autowired
@@ -26,6 +27,17 @@ public class EquipamentoController {
     @PostMapping
     public Equipamento criar(@RequestBody Equipamento equipamento) {
         return service.salvar(equipamento);
+    }
+
+    @PutMapping("/{id}")
+    public Equipamento atualizar(@PathVariable int id, @RequestBody Equipamento dados) {
+        Equipamento atual = service.buscarPorId(id);
+        atual.setPatrimonio(dados.getPatrimonio());
+        atual.setTipo(dados.getTipo());
+        atual.setMarca(dados.getMarca());
+        atual.setModelo(dados.getModelo());
+        atual.setIdSetor(dados.getIdSetor());
+        return service.salvar(atual);
     }
 
     @DeleteMapping("/{id}")

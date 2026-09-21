@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
@@ -26,6 +27,17 @@ public class UsuarioController {
     @PostMapping
     public Usuario criar(@RequestBody Usuario usuario) {
         return service.salvar(usuario);
+    }
+
+    @PutMapping("/{id}")
+    public Usuario atualizar(@PathVariable int id, @RequestBody Usuario dados) {
+        Usuario atual = service.buscarPorId(id);
+        atual.setNome(dados.getNome());
+        atual.setEmail(dados.getEmail());
+        atual.setSenha(dados.getSenha());
+        atual.setPerfil(dados.getPerfil());
+        atual.setIdSetor(dados.getIdSetor());
+        return service.salvar(atual);
     }
 
     @DeleteMapping("/{id}")

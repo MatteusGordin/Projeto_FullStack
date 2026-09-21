@@ -1,18 +1,26 @@
 package br.com.nexusti.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class Equipamento {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String patrimonio;
     private String tipo;
     private String marca;
     private String modelo;
-    private int idSetor;
+    private Integer idSetor;
 
     public Equipamento() {
     }
 
-    public Equipamento(int id, String patrimonio, String tipo, String marca, String modelo, int idSetor) {
+    public Equipamento(int id, String patrimonio, String tipo, String marca, String modelo, Integer idSetor) {
         this.id = id;
         this.patrimonio = patrimonio;
         this.tipo = tipo;
@@ -61,11 +69,11 @@ public class Equipamento {
         this.modelo = modelo;
     }
 
-    public int getIdSetor() {
+    public Integer getIdSetor() {
         return idSetor;
     }
 
-    public void setIdSetor(int idSetor) {
+    public void setIdSetor(Integer idSetor) {
         this.idSetor = idSetor;
     }
 }

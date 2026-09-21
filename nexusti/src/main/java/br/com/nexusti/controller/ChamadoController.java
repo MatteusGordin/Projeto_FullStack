@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chamados")
+@CrossOrigin(origins = "*")
 public class ChamadoController {
 
     @Autowired
@@ -26,6 +27,20 @@ public class ChamadoController {
     @PostMapping
     public Chamado criar(@RequestBody Chamado chamado) {
         return service.salvar(chamado);
+    }
+
+    @PutMapping("/{id}")
+    public Chamado atualizar(@PathVariable int id, @RequestBody Chamado dados) {
+        Chamado atual = service.buscarPorId(id);
+        atual.setTitulo(dados.getTitulo());
+        atual.setDescricao(dados.getDescricao());
+        atual.setStatus(dados.getStatus());
+        atual.setPrioridade(dados.getPrioridade());
+        atual.setDataFechamento(dados.getDataFechamento());
+        atual.setIdSolicitante(dados.getIdSolicitante());
+        atual.setIdTecnico(dados.getIdTecnico());
+        atual.setIdEquipamento(dados.getIdEquipamento());
+        return service.salvar(atual);
     }
 
     @DeleteMapping("/{id}")
