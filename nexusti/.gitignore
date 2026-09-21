@@ -24,3 +24,6 @@ build/
 !**/src/test/**/build/
 .vscode/
 .env
+dist/
+node_modules/
+frontend/dist/

@@ -2,9 +2,13 @@ package br.com.nexusti.controller;
 
 import br.com.nexusti.model.Setor;
 import br.com.nexusti.service.SetorService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/setores")
@@ -15,30 +19,43 @@ public class SetorController {
     private SetorService service;
 
     @GetMapping
-    public List<Setor> listarTodos() {
-        return service.listarTodos();
+    public Page<Setor> listarTodos(Pageable pageable) {
+        return service.listarTodos(pageable);
     }
 
     @GetMapping("/{id}")
-    public Setor buscarPorId(@PathVariable int id) {
-        return service.buscarPorId(id);
+    public ResponseEntity<Setor> buscarPorId(@PathVariable int id) {
+        Setor encontrado = service.buscarPorId(id);
+        if (encontrado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(encontrado);
     }
 
     @PostMapping
-    public Setor criar(@RequestBody Setor setor) {
-        return service.salvar(setor);
+    public ResponseEntity<Setor> criar(@Valid @RequestBody Setor setor) {
+        Setor salvo = service.salvar(setor);
+        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @PutMapping("/{id}")
-    public Setor atualizar(@PathVariable int id, @RequestBody Setor dados) {
+    public ResponseEntity<Setor> atualizar(@PathVariable int id, @Valid @RequestBody Setor dados) {
         Setor atual = service.buscarPorId(id);
+        if (atual == null) {
+            return ResponseEntity.notFound().build();
+        }
         atual.setNome(dados.getNome());
         atual.setSigla(dados.getSigla());
-        return service.salvar(atual);
+        return ResponseEntity.ok(service.salvar(atual));
     }
 
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable int id) {
+    public ResponseEntity<Void> deletar(@PathVariable int id) {
+        Setor atual = service.buscarPorId(id);
+        if (atual == null) {
+            return ResponseEntity.notFound().build();
+        }
         service.excluir(id);
+        return ResponseEntity.noContent().build();
     }
 }

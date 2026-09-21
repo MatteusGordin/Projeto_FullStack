@@ -4,6 +4,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 @Entity
 public class Chamado {
@@ -11,20 +16,28 @@ public class Chamado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @NotBlank
+    @Size(min = 3, max = 100)
     private String titulo;
+    @NotBlank
+    @Size(min = 5, max = 2000)
     private String descricao;
     private String status;
     private String prioridade;
-    private String dataAbertura;
-    private String dataFechamento;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dataAbertura;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dataFechamento;
+    @NotNull
     private Integer idSolicitante;
     private Integer idTecnico;
+    @NotNull
     private Integer idEquipamento;
 
     public Chamado() {
     }
 
-    public Chamado(int id, String titulo, String descricao, String status, String prioridade, String dataAbertura, String dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento) {
+    public Chamado(int id, String titulo, String descricao, String status, String prioridade, LocalDateTime dataAbertura, LocalDateTime dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -77,19 +90,19 @@ public class Chamado {
         this.prioridade = prioridade;
     }
 
-    public String getDataAbertura() {
+    public LocalDateTime getDataAbertura() {
         return dataAbertura;
     }
 
-    public void setDataAbertura(String dataAbertura) {
+    public void setDataAbertura(LocalDateTime dataAbertura) {
         this.dataAbertura = dataAbertura;
     }
 
-    public String getDataFechamento() {
+    public LocalDateTime getDataFechamento() {
         return dataFechamento;
     }
 
-    public void setDataFechamento(String dataFechamento) {
+    public void setDataFechamento(LocalDateTime dataFechamento) {
         this.dataFechamento = dataFechamento;
     }
 
