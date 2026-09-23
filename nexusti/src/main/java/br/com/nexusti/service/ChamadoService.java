@@ -59,7 +59,7 @@ public class ChamadoService {
         }
         chamado.setTitulo(tituloValidado);
         chamado.setDescricao(descricaoValidada);
-        if (chamado.getId() == 0) {
+        if (chamado.getId() == null || chamado.getId() == 0) {
             chamado.setStatus("ABERTO");
             chamado.setDataAbertura(LocalDateTime.now());
         }

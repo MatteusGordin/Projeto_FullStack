@@ -12,7 +12,7 @@ public class Equipamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank
     private String patrimonio;
     @NotBlank
@@ -27,7 +27,7 @@ public class Equipamento {
     public Equipamento() {
     }
 
-    public Equipamento(int id, String patrimonio, String tipo, String marca, String modelo, Integer idSetor) {
+    public Equipamento(Integer id, String patrimonio, String tipo, String marca, String modelo, Integer idSetor) {
         this.id = id;
         this.patrimonio = patrimonio;
         this.tipo = tipo;
@@ -36,11 +36,11 @@ public class Equipamento {
         this.idSetor = idSetor;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

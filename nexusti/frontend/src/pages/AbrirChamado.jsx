@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
 const estilos = {
@@ -57,17 +57,75 @@ const estilos = {
     color: "#B91C1C",
     textAlign: "center",
     marginTop: "16px"
+  },
+  centro: {
+    fontSize: "14px",
+    color: "#4B5563",
+    textAlign: "center"
   }
 };
+
+const prioridades = ["BAIXA", "MEDIA", "ALTA", "URGENTE"];
+
+function extrairLista(dados) {
+  if (Array.isArray(dados)) {
+    return dados;
+  }
+  if (dados !== null && typeof dados === "object" && Array.isArray(dados.content)) {
+    return dados.content;
+  }
+  return [];
+}
 
 function AbrirChamado() {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [prioridade, setPrioridade] = useState("MEDIA");
+  const [idSetor, setIdSetor] = useState("");
   const [idSolicitante, setIdSolicitante] = useState("");
   const [idEquipamento, setIdEquipamento] = useState("");
+  const [setores, setSetores] = useState([]);
+  const [equipamentos, setEquipamentos] = useState([]);
+  const [solicitantes, setSolicitantes] = useState([]);
+  const [carregandoListas, setCarregandoListas] = useState(true);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    async function carregarOpcoes() {
+      setCarregandoListas(true);
+      setErro("");
+      try {
+        const [respostaSetores, respostaEquipamentos, respostaUsuarios] = await Promise.all([
+          api.get("/setores/opcoes"),
+          api.get("/equipamentos/opcoes"),
+          api.get("/usuarios", { params: { size: 200, sort: "nome" } })
+        ]);
+        setSetores(extrairLista(respostaSetores.data));
+        setEquipamentos(extrairLista(respostaEquipamentos.data));
+        setSolicitantes(extrairLista(respostaUsuarios.data));
+      } catch (falha) {
+        const respostaErro = falha && falha.response ? falha.response : null;
+        const detalhe = respostaErro && respostaErro.data ? respostaErro.data : null;
+        if (detalhe && detalhe.mensagem) {
+          setErro(detalhe.mensagem);
+        } else {
+          setErro("Falha ao carregar setores e equipamentos. Tente novamente.");
+        }
+      } finally {
+        setCarregandoListas(false);
+      }
+    }
+    carregarOpcoes();
+  }, []);
+
+  const equipamentosFiltrados = idSetor === "" ? equipamentos : equipamentos.filter((item) => String(item.idSetor) === String(idSetor));
+
+  function aoTrocarSetor(valor) {
+    setIdSetor(valor);
+    setIdEquipamento("");
+  }
 
   async function salvar(e) {
     e.preventDefault();
@@ -75,8 +133,6 @@ function AbrirChamado() {
     setErro("");
     const tituloNormalizado = titulo.trim();
     const descricaoNormalizada = descricao.trim();
-    const solicitanteNormalizado = idSolicitante.trim();
-    const equipamentoNormalizado = idEquipamento.trim();
     if (tituloNormalizado === "") {
       setErro("Informe o titulo do chamado.");
       return;
@@ -93,14 +149,18 @@ function AbrirChamado() {
       setErro("A descricao deve ter pelo menos 5 caracteres.");
       return;
     }
-    const solicitanteNumero = Number(solicitanteNormalizado);
-    const equipamentoNumero = Number(equipamentoNormalizado);
-    if (solicitanteNormalizado === "" || Number.isNaN(solicitanteNumero) || solicitanteNumero <= 0) {
-      setErro("Informe um ID de solicitante valido maior que zero.");
+    if (prioridades.includes(prioridade) === false) {
+      setErro("Selecione uma prioridade valida.");
       return;
     }
-    if (equipamentoNormalizado === "" || Number.isNaN(equipamentoNumero) || equipamentoNumero <= 0) {
-      setErro("Informe um ID de equipamento valido maior que zero.");
+    const solicitanteNumero = Number(idSolicitante);
+    const equipamentoNumero = Number(idEquipamento);
+    if (idSolicitante === "" || Number.isNaN(solicitanteNumero) || solicitanteNumero <= 0) {
+      setErro("Selecione o solicitante.");
+      return;
+    }
+    if (idEquipamento === "" || Number.isNaN(equipamentoNumero) || equipamentoNumero <= 0) {
+      setErro("Selecione o equipamento.");
       return;
     }
     if (carregando === true) {
@@ -110,7 +170,7 @@ function AbrirChamado() {
     const dados = {
       titulo: tituloNormalizado,
       descricao: descricaoNormalizada,
-      prioridade: "MEDIA",
+      prioridade: prioridade,
       idSolicitante: solicitanteNumero,
       idEquipamento: equipamentoNumero
     };
@@ -119,6 +179,8 @@ function AbrirChamado() {
       setMensagem("Chamado salvo com sucesso.");
       setTitulo("");
       setDescricao("");
+      setPrioridade("MEDIA");
+      setIdSetor("");
       setIdSolicitante("");
       setIdEquipamento("");
     } catch (falha) {
@@ -134,6 +196,15 @@ function AbrirChamado() {
     }
   }
 
+  if (carregandoListas === true) {
+    return (
+      <div style={estilos.container}>
+        <h2>Abrir Chamado</h2>
+        <p style={estilos.centro}>Carregando setores e equipamentos...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={estilos.container}>
       <h2>Abrir Chamado</h2>
@@ -147,12 +218,39 @@ function AbrirChamado() {
           <input style={estilos.campo} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva o problema" />
         </div>
         <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>ID do solicitante</label>
-          <input style={estilos.campo} value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)} placeholder="Exemplo: 1" inputMode="numeric" />
+          <label style={estilos.rotulo}>Prioridade</label>
+          <select style={estilos.campo} value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
+            {prioridades.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
         </div>
         <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>ID do equipamento</label>
-          <input style={estilos.campo} value={idEquipamento} onChange={(e) => setIdEquipamento(e.target.value)} placeholder="Exemplo: 1" inputMode="numeric" />
+          <label style={estilos.rotulo}>Setor do equipamento</label>
+          <select style={estilos.campo} value={idSetor} onChange={(e) => aoTrocarSetor(e.target.value)}>
+            <option value="">Todos os setores</option>
+            {setores.map((item) => (
+              <option key={item.id} value={item.id}>{item.nome} ({item.sigla})</option>
+            ))}
+          </select>
+        </div>
+        <div style={estilos.bloco}>
+          <label style={estilos.rotulo}>Solicitante</label>
+          <select style={estilos.campo} value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)}>
+            <option value="">Selecione o solicitante</option>
+            {solicitantes.map((item) => (
+              <option key={item.id} value={item.id}>{item.nome} ({item.email})</option>
+            ))}
+          </select>
+        </div>
+        <div style={estilos.bloco}>
+          <label style={estilos.rotulo}>Equipamento</label>
+          <select style={estilos.campo} value={idEquipamento} onChange={(e) => setIdEquipamento(e.target.value)}>
+            <option value="">Selecione o equipamento</option>
+            {equipamentosFiltrados.map((item) => (
+              <option key={item.id} value={item.id}>{item.patrimonio} - {item.tipo} {item.marca} {item.modelo}</option>
+            ))}
+          </select>
         </div>
         <button type="submit" style={estilos.botao} disabled={carregando}>
           {carregando ? "Salvando..." : "Salvar"}

@@ -19,7 +19,7 @@ public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank
     @Size(min = 3, max = 100)
     private String nome;
@@ -38,7 +38,7 @@ public class Usuario implements UserDetails {
     public Usuario() {
     }
 
-    public Usuario(int id, String nome, String email, String senha, String perfil, Integer idSetor) {
+    public Usuario(Integer id, String nome, String email, String senha, String perfil, Integer idSetor) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -47,11 +47,11 @@ public class Usuario implements UserDetails {
         this.idSetor = idSetor;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

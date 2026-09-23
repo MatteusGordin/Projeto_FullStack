@@ -12,7 +12,7 @@ public class Setor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank
     @Size(min = 2, max = 100)
     private String nome;
@@ -23,17 +23,17 @@ public class Setor {
     public Setor() {
     }
 
-    public Setor(int id, String nome, String sigla) {
+    public Setor(Integer id, String nome, String sigla) {
         this.id = id;
         this.nome = nome;
         this.sigla = sigla;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

@@ -15,7 +15,7 @@ public class HistoricoChamado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank
     @Size(min = 3, max = 2000)
     private String mensagem;
@@ -29,7 +29,7 @@ public class HistoricoChamado {
     public HistoricoChamado() {
     }
 
-    public HistoricoChamado(int id, String mensagem, LocalDateTime dataRegistro, Integer idChamado, Integer idUsuario) {
+    public HistoricoChamado(Integer id, String mensagem, LocalDateTime dataRegistro, Integer idChamado, Integer idUsuario) {
         this.id = id;
         this.mensagem = mensagem;
         this.dataRegistro = dataRegistro;
@@ -37,11 +37,11 @@ public class HistoricoChamado {
         this.idUsuario = idUsuario;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

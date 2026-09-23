@@ -26,7 +26,7 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults());
         http.csrf(csrf -> csrf.disable());
         http.sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated());
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login", "/api/auth/bootstrap").permitAll().anyRequest().authenticated());
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

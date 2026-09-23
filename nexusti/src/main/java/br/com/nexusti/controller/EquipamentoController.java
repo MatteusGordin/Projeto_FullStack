@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipamentos")
@@ -21,6 +22,11 @@ public class EquipamentoController {
     @GetMapping
     public Page<Equipamento> listarTodos(Pageable pageable) {
         return service.listarTodos(pageable);
+    }
+
+    @GetMapping("/opcoes")
+    public List<Equipamento> listarOpcoes() {
+        return service.listarOpcoes();
     }
 
     @GetMapping("/{id}")

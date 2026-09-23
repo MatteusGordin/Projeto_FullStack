@@ -5,7 +5,9 @@ import br.com.nexusti.repository.SetorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class SetorService {
@@ -15,6 +17,10 @@ public class SetorService {
 
     public Page<Setor> listarTodos(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    public List<Setor> listarOpcoes() {
+        return repository.findAll(Sort.by("nome"));
     }
 
     public Setor buscarPorId(int id) {

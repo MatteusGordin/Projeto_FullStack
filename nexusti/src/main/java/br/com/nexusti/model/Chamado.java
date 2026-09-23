@@ -15,7 +15,7 @@ public class Chamado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank
     @Size(min = 3, max = 100)
     private String titulo;
@@ -37,7 +37,7 @@ public class Chamado {
     public Chamado() {
     }
 
-    public Chamado(int id, String titulo, String descricao, String status, String prioridade, LocalDateTime dataAbertura, LocalDateTime dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento) {
+    public Chamado(Integer id, String titulo, String descricao, String status, String prioridade, LocalDateTime dataAbertura, LocalDateTime dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -50,11 +50,11 @@ public class Chamado {
         this.idEquipamento = idEquipamento;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
