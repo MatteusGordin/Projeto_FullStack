@@ -64,4 +64,18 @@ public class AuthController {
         corpo.put("token", token);
         return ResponseEntity.ok(corpo);
     }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<Map<String, String>> perfil(Authentication autenticacao) {
+        String email = autenticacao == null ? "" : autenticacao.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email == null ? "" : email.trim()).orElse(null);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Map<String, String> corpo = new HashMap<>();
+        corpo.put("email", usuario.getEmail());
+        corpo.put("nome", usuario.getNome());
+        corpo.put("perfil", usuario.getPerfil());
+        return ResponseEntity.ok(corpo);
+    }
 }

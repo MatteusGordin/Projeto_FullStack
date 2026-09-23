@@ -1,58 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
-
-const estilos = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-    padding: "24px",
-    maxWidth: "640px",
-    marginLeft: "auto",
-    marginRight: "auto",
-    backgroundColor: "#FFFFFF",
-    borderRadius: "12px"
-  },
-  cartao: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    padding: "16px",
-    backgroundColor: "#F9FAFB",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "#D1D5DB",
-    borderRadius: "12px"
-  },
-  texto: {
-    fontSize: "14px",
-    color: "#111827",
-    marginTop: "8px",
-    marginBottom: "8px"
-  },
-  botao: {
-    padding: "14px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    backgroundColor: "#1D4ED8",
-    borderWidth: "0px",
-    borderRadius: "12px"
-  },
-  centro: {
-    fontSize: "14px",
-    color: "#4B5563",
-    textAlign: "center",
-    padding: "16px"
-  },
-  erro: {
-    fontSize: "14px",
-    color: "#B91C1C",
-    textAlign: "center",
-    padding: "16px"
-  }
-};
+import { classeBadge } from "../prioridades";
 
 function VerChamado() {
   const { id } = useParams();
@@ -119,44 +68,44 @@ function VerChamado() {
 
   if (carregando === true) {
     return (
-      <div style={estilos.container}>
-        <h2>Ver Chamado</h2>
-        <p style={estilos.centro}>Carregando...</p>
+      <div className="cartao cartao--md">
+        <h2 className="titulo-pagina">Ver Chamado</h2>
+        <p className="texto-suave">Carregando...</p>
       </div>
     );
   }
 
   if (erro !== "" && chamado === null) {
     return (
-      <div style={estilos.container}>
-        <h2>Ver Chamado</h2>
-        <p style={estilos.erro}>{erro}</p>
+      <div className="cartao cartao--md">
+        <h2 className="titulo-pagina">Ver Chamado</h2>
+        <p className="mensagem-erro">{erro}</p>
       </div>
     );
   }
 
   if (chamado === null) {
     return (
-      <div style={estilos.container}>
-        <h2>Ver Chamado</h2>
-        <p style={estilos.centro}>Chamado nao encontrado.</p>
+      <div className="cartao cartao--md">
+        <h2 className="titulo-pagina">Ver Chamado</h2>
+        <p className="texto-suave">Chamado nao encontrado.</p>
       </div>
     );
   }
 
   return (
-    <div style={estilos.container}>
-      <h2>Ver Chamado</h2>
-      <div style={estilos.cartao}>
-        <p style={estilos.texto}>Titulo: {chamado.titulo}</p>
-        <p style={estilos.texto}>Descricao: {chamado.descricao}</p>
-        <p style={estilos.texto}>Status: {chamado.status}</p>
-        <p style={estilos.texto}>Prioridade: {chamado.prioridade}</p>
+    <div className="cartao cartao--md">
+      <h2 className="titulo-pagina">Ver Chamado</h2>
+      <div className="detalhe">
+        <p>Titulo: {chamado.titulo}</p>
+        <p>Descricao: {chamado.descricao}</p>
+        <p>Status: {chamado.status}</p>
+        <p>Prioridade: <span className={classeBadge(chamado.prioridade)}>{chamado.prioridade ? chamado.prioridade : "-"}</span></p>
       </div>
-      <button style={estilos.botao} onClick={fechar} disabled={fechando}>
+      <button className="botao" onClick={fechar} disabled={fechando}>
         {fechando ? "Fechando..." : "Fechar Chamado"}
       </button>
-      {erro !== "" && <p style={estilos.erro}>{erro}</p>}
+      {erro !== "" && <p className="mensagem-erro">{erro}</p>}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 Banco de dados: PostgreSQL
 Gerenciamento de schema: Hibernate (`spring.jpa.hibernate.ddl-auto=update`)
-Total de tabelas: 5
+Total de tabelas: 6
 
 Este documento descreve a modelagem relacional do Sistema de HelpDesk Omnichannel Nexus TI. As entidades JPA correspondentes encontram-se em `src/main/java/br/com/nexusti/model/`.
 
@@ -12,6 +12,7 @@ Este documento descreve a modelagem relacional do Sistema de HelpDesk Omnichanne
 - Datas de chamados e histórico: `LocalDateTime`, serializadas no padrão `yyyy-MM-dd'T'HH:mm:ss`.
 - Senhas: nunca armazenadas em texto claro. O `UsuarioService` aplica hash BCrypt via `PasswordEncoder` antes da persistência (`encoder.encode(senha)`). A autenticação compara o hash no login JWT.
 - Perfis de acesso (coluna `usuario.perfil`, normalizada em caixa alta): `ADMIN`, `TECNICO`, `USUARIO`. Na camada de segurança (`Usuario.getAuthorities()`), cada perfil é exposto como authority Spring Security no formato `ROLE_ADMIN`, `ROLE_TECNICO` e `ROLE_USUARIO`. O prefixo `ROLE_` é adicionado automaticamente quando ausente.
+- Situação do usuário (coluna `usuario.ativo`, booleana, nula em registros legados): `isEnabled()` retorna verdadeiro quando `ativo` é nulo ou verdadeiro. Usuários com `ativo` falso têm o login recusado com `401` e os tokens já emitidos deixam de ser aceitos pelo `JwtFilter`.
 
 ## 1. Tabela `setor`
 
@@ -37,12 +38,13 @@ Representa solicitantes, técnicos e administradores. Implementa `UserDetails` p
 | senha | VARCHAR(100) / String | Obrigatório, mínimo 4 caracteres (texto claro na entrada) | Hash BCrypt da senha; jamais texto claro no banco |
 | perfil | VARCHAR / String | Obrigatório | Perfil de acesso: `ADMIN`, `TECNICO` ou `USUARIO` (authority: `ROLE_ADMIN`, `ROLE_TECNICO`, `ROLE_USUARIO`) |
 | id_setor | INTEGER / Integer (FK) | Obrigatório, > 0 | Referência ao setor de lotação (`setor.id`) |
+| ativo | BOOLEAN / Boolean | Opcional, nulo em registros legados | Falso bloqueia login e invalida tokens; nulo equivale a ativo |
 
 Relacionamentos:
 - `usuario.id_setor` referencia `setor.id`.
 - `usuario.id` é referenciado por `chamado.id_solicitante`, `chamado.id_tecnico` e `historico_chamado.id_usuario`.
 
-Validações aplicadas em `UsuarioService.salvar()`: nome com no mínimo 3 caracteres, e-mail contendo `@`, senha com no mínimo 4 caracteres, setor informado e maior que zero.
+Validações aplicadas em `UsuarioService.salvar()`: nome com no mínimo 3 caracteres, e-mail contendo `@`, perfil restrito a `ADMIN`, `TECNICO` ou `USUARIO`, senha com no mínimo 4 caracteres na criação (vazia na edição mantém o hash atual), setor informado e maior que zero.
 
 ## 3. Tabela `equipamento`
 
@@ -99,6 +101,18 @@ Representa a trilha de auditoria e comunicação de cada chamado: cada atualiza�
 Relacionamentos:
 - `historico_chamado.id_chamado` referencia `chamado.id`.
 - `historico_chamado.id_usuario` referencia `usuario.id`.
+
+## 6. Tabela `prioridade`
+
+Catálogo gerenciável pela equipe de TI com os níveis de criticidade dos chamados. A coluna `chamado.prioridade` permanece textual com o nome do nível, sem chave estrangeira, de modo que registros antigos continuam válidos mesmo após edições no catálogo.
+
+| Coluna | Tipo (PostgreSQL / JPA) | Restrições | Descrição |
+|---|---|---|---|
+| id | SERIAL / Integer (PK) | Chave primária, autoincremento | Identificador da prioridade |
+| nome | VARCHAR(30) / String | Obrigatório, único, 2–30 caracteres, caixa alta | Nome do nível (ex.: BAIXA, MEDIA, ALTA, URGENTE) |
+| cor | VARCHAR(20) / String | Opcional (padrão neutro quando vazia) | Cor de referência do nível para guias de interface |
+| ordem | INTEGER / Integer | Opcional (padrão 0) | Ordem de exibição no catálogo |
+| ativa | BOOLEAN / Boolean | Opcional (padrão verdadeiro na criação) | Somente ativas aparecem nos selects de abertura |
 
 ## Diagrama Resumido de Relacionamentos
 

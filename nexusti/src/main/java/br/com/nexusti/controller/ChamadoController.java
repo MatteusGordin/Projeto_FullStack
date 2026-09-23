@@ -33,9 +33,14 @@ public class ChamadoController {
         return corpo;
     }
 
+    @GetMapping("/metricas/prioridades")
+    public Map<String, Long> metricasPorPrioridade() {
+        return service.contarPorPrioridade();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Chamado> buscarPorId(@PathVariable int id) {
-        Chamado encontrado = service.buscarPorId(id);
+        Chamado encontrado = service.buscarAcessivel(id);
         if (encontrado == null) {
             return ResponseEntity.notFound().build();
         }
@@ -50,7 +55,7 @@ public class ChamadoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Chamado> atualizar(@PathVariable int id, @Valid @RequestBody Chamado dados) {
-        Chamado atual = service.buscarPorId(id);
+        Chamado atual = service.buscarAcessivel(id);
         if (atual == null) {
             return ResponseEntity.notFound().build();
         }
@@ -67,7 +72,7 @@ public class ChamadoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable int id) {
-        Chamado atual = service.buscarPorId(id);
+        Chamado atual = service.buscarAcessivel(id);
         if (atual == null) {
             return ResponseEntity.notFound().build();
         }

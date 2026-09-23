@@ -3,6 +3,7 @@ package br.com.nexusti.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,6 +42,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> tratarNaoEncontrado(UsernameNotFoundException ex) {
         Map<String, String> corpo = new HashMap<>();
         corpo.put("mensagem", "Email ou senha invalidos");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpo);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<Map<String, String>> tratarDesativado(DisabledException ex) {
+        Map<String, String> corpo = new HashMap<>();
+        corpo.put("mensagem", "Usuario desativado. Contate o administrador");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpo);
     }
 }

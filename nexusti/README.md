@@ -8,20 +8,20 @@ O projeto foi desenvolvido como trabalho acadêmico da disciplina de Desenvolvim
 
 ```
 nexusti/
-├── src/main/java/br/com/nexusti/   # Backend (Spring Boot)
-│   ├── controller/                 # Auth, Setor, Usuario, Equipamento, Chamado, HistoricoChamado
-│   ├── service/                    # Regras de negócio e validações
-│   ├── repository/                 # Spring Data JPA
-│   ├── model/                      # Entidades JPA
-│   └── security/                   # JWT (JwtService, JwtFilter, SecurityConfig)
-├── src/main/resources/             # application.properties
-├── frontend/                       # Frontend (React + Vite)
-│   ├── src/                        # Páginas, componentes, serviços Axios
+├── src/main/java/br/com/nexusti/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── security/
+├── src/main/resources/
+├── frontend/
+│   ├── src/
 │   └── vite.config.js
-├── database/                       # Scripts SQL de apoio
-├── .env.example                    # Variáveis de ambiente do backend
-├── DATABASE.md                     # Dicionário de dados
-└── pom.xml                         # Dependências Maven
+├── database/
+├── .env.example
+├── DATABASE.md
+└── pom.xml
 ```
 
 ## Tecnologias Utilizadas
@@ -55,7 +55,15 @@ nexusti/
 
 ## Como Rodar o Backend
 
-O backend lê a conexão com o banco exclusivamente via variáveis de ambiente, definidas em um arquivo `.env` na raiz do projeto.
+> O repositório clonado contém o projeto na subpasta `nexusti/`.
+> Todos os comandos do backend devem ser executados dentro dela:
+>
+> ```bash
+> git clone https://github.com/MattGordin/Projeto_FullStack.git
+> cd Projeto_FullStack/nexusti
+> ```
+>
+> O backend lê a conexão com o banco exclusivamente via variáveis de ambiente, definidas em um arquivo `.env` na raiz do projeto (dentro de `nexusti/`).
 
 1. Copie o arquivo de exemplo:
 
@@ -76,6 +84,11 @@ DB_URL=jdbc:postgresql://localhost:5432/nexusti
 DB_USER=postgres
 DB_PASSWORD=sua_senha
 ```
+
+> Sem preencher o `.env`, o backend não sobe: o `application.properties`
+> exige `DB_URL`, `DB_USER` e `DB_PASSWORD`.
+> O arquivo `.env` nunca é commitado (está no `.gitignore`); só o
+> `.env.example` versionado serve de modelo.
 
 Para Supabase, utilize a URL de conexão direta (porta 5432) fornecida no painel do projeto.
 
@@ -122,8 +135,13 @@ cp .env.example .env
 Conteúdo esperado (`frontend/.env`):
 
 ```env
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8080/api
 ```
+
+> Atenção: o valor precisa terminar com `/api`. O `frontend/src/services/api.js` usa
+> `VITE_API_URL` como base e chama rotas como `/auth/login` e `/chamados`.
+> Se a variável estiver ausente ou vazia, o código usa o fallback
+> `http://localhost:8080/api` automaticamente.
 
 4. Inicie o servidor de desenvolvimento:
 
@@ -184,6 +202,11 @@ Comportamento esperado:
 - Primeira chamada com banco vazio: retorna `201 Created` com o usuário persistido (senha já armazenada como hash BCrypt).
 - Chamadas subsequentes: retornam `409 Conflict` com a mensagem `Sistema ja possui usuarios cadastrados`.
 
+> O campo `idSetor` aceita qualquer inteiro maior que zero no bootstrap
+> (ex.: `1`), mesmo com a tabela de setores ainda vazia — a validação exige
+> apenas `idSetor > 0`. Após o login, cadastre o setor real em
+> `POST /api/setores` e, se necessário, ajuste o usuário.
+
 Após o bootstrap, autentique-se em `POST /api/auth/login` para obter o token JWT:
 
 ```bash
@@ -218,15 +241,16 @@ Authorization: Bearer <token>
 
 | Módulo | Base | Autenticação |
 |---|---|---|
-| Auth (login/bootstrap) | `/api/auth` | Pública (login e bootstrap); demais exigem JWT |
-| Setor | `/api/setores` | JWT |
-| Usuário | `/api/usuarios` | JWT |
-| Equipamento | `/api/equipamentos` | JWT |
+| Auth (login/bootstrap/perfil) | `/api/auth` | Públicas (login e bootstrap); perfil e demais exigem JWT |
+| Setor | `/api/setores` | Leitura JWT; escrita ADMIN ou TECNICO |
+| Usuário | `/api/usuarios` | Leitura JWT; escrita ADMIN ou TECNICO |
+| Equipamento | `/api/equipamentos` | Leitura JWT; escrita ADMIN ou TECNICO |
+| Prioridade | `/api/prioridades` | Leitura JWT; escrita ADMIN ou TECNICO |
 | Chamado | `/api/chamados` | JWT |
 | Histórico do Chamado | `/api/historicos` | JWT |
 
 ## Documentação Complementar
 
-- `DATABASE.md` — dicionário de dados com a estrutura das 5 tabelas, relacionamentos, perfis e política de senhas.
+- `DATABASE.md` — dicionário de dados com a estrutura das 6 tabelas, relacionamentos, perfis e política de senhas.
 - `database/` — scripts SQL de apoio, quando aplicável.
 - `frontend/` — código-fonte da interface web em React.

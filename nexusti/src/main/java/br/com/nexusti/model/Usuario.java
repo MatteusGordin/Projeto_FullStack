@@ -34,6 +34,7 @@ public class Usuario implements UserDetails {
     private String perfil;
     @NotNull
     private Integer idSetor;
+    private Boolean ativo;
 
     public Usuario() {
     }
@@ -95,6 +96,14 @@ public class Usuario implements UserDetails {
         this.idSetor = idSetor;
     }
 
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String papel = perfil == null ? "" : perfil.trim().toUpperCase();
@@ -131,6 +140,6 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return ativo == null || ativo;
     }
 }

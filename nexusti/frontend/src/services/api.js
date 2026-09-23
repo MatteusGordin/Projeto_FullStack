@@ -18,4 +18,22 @@ api.interceptors.request.use((configuracao) => {
   return configuracao;
 });
 
+api.interceptors.response.use(
+  (resposta) => resposta,
+  (falha) => {
+    const status = falha && falha.response ? falha.response.status : 0;
+    const url = falha && falha.config && falha.config.url ? String(falha.config.url) : "";
+    const rotaPublica = url.indexOf("/auth/login") !== -1 || url.indexOf("/auth/bootstrap") !== -1;
+    const token = localStorage.getItem("token");
+    const logado = token !== null && token !== "";
+    if (status === 401 && rotaPublica === false && logado === true) {
+      localStorage.removeItem("token");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(falha);
+  }
+);
+
 export default api;

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -39,12 +40,14 @@ public class EquipamentoController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Equipamento> criar(@Valid @RequestBody Equipamento equipamento) {
         Equipamento salvo = service.salvar(equipamento);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Equipamento> atualizar(@PathVariable int id, @Valid @RequestBody Equipamento dados) {
         Equipamento atual = service.buscarPorId(id);
         if (atual == null) {
@@ -59,6 +62,7 @@ public class EquipamentoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Void> deletar(@PathVariable int id) {
         Equipamento atual = service.buscarPorId(id);
         if (atual == null) {

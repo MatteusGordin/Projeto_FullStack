@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,13 +34,15 @@ public class UsuarioController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Usuario> criar(@Valid @RequestBody Usuario usuario) {
         Usuario salvo = service.salvar(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizar(@PathVariable int id, @Valid @RequestBody Usuario dados) {
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
+    public ResponseEntity<Usuario> atualizar(@PathVariable int id, @RequestBody Usuario dados) {
         Usuario atual = service.buscarPorId(id);
         if (atual == null) {
             return ResponseEntity.notFound().build();
@@ -49,10 +52,12 @@ public class UsuarioController {
         atual.setSenha(dados.getSenha());
         atual.setPerfil(dados.getPerfil());
         atual.setIdSetor(dados.getIdSetor());
+        atual.setAtivo(dados.getAtivo());
         return ResponseEntity.ok(service.salvar(atual));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Void> deletar(@PathVariable int id) {
         Usuario atual = service.buscarPorId(id);
         if (atual == null) {

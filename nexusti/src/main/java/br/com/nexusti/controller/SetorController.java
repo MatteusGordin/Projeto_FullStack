@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -39,12 +40,14 @@ public class SetorController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Setor> criar(@Valid @RequestBody Setor setor) {
         Setor salvo = service.salvar(setor);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Setor> atualizar(@PathVariable int id, @Valid @RequestBody Setor dados) {
         Setor atual = service.buscarPorId(id);
         if (atual == null) {
@@ -56,6 +59,7 @@ public class SetorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Void> deletar(@PathVariable int id) {
         Setor atual = service.buscarPorId(id);
         if (atual == null) {

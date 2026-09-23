@@ -1,71 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
-const estilos = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-    padding: "24px",
-    maxWidth: "640px",
-    marginLeft: "auto",
-    marginRight: "auto",
-    backgroundColor: "#FFFFFF",
-    borderRadius: "12px"
-  },
-  formulario: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px"
-  },
-  bloco: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px"
-  },
-  rotulo: {
-    fontSize: "14px",
-    fontWeight: "bold",
-    color: "#111827"
-  },
-  campo: {
-    padding: "14px",
-    fontSize: "16px",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "#D1D5DB",
-    borderRadius: "12px",
-    backgroundColor: "#F9FAFB"
-  },
-  botao: {
-    padding: "14px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    backgroundColor: "#1D4ED8",
-    borderWidth: "0px",
-    borderRadius: "12px"
-  },
-  mensagem: {
-    fontSize: "14px",
-    color: "#15803D",
-    textAlign: "center",
-    marginTop: "16px"
-  },
-  erro: {
-    fontSize: "14px",
-    color: "#B91C1C",
-    textAlign: "center",
-    marginTop: "16px"
-  },
-  centro: {
-    fontSize: "14px",
-    color: "#4B5563",
-    textAlign: "center"
-  }
-};
-
-const prioridades = ["BAIXA", "MEDIA", "ALTA", "URGENTE"];
+const prioridadesPadrao = ["BAIXA", "MEDIA", "ALTA", "URGENTE"];
 
 function extrairLista(dados) {
   if (Array.isArray(dados)) {
@@ -87,6 +23,7 @@ function AbrirChamado() {
   const [setores, setSetores] = useState([]);
   const [equipamentos, setEquipamentos] = useState([]);
   const [solicitantes, setSolicitantes] = useState([]);
+  const [prioridades, setPrioridades] = useState([]);
   const [carregandoListas, setCarregandoListas] = useState(true);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
@@ -97,14 +34,17 @@ function AbrirChamado() {
       setCarregandoListas(true);
       setErro("");
       try {
-        const [respostaSetores, respostaEquipamentos, respostaUsuarios] = await Promise.all([
+        const [respostaSetores, respostaEquipamentos, respostaUsuarios, respostaPrioridades] = await Promise.all([
           api.get("/setores/opcoes"),
           api.get("/equipamentos/opcoes"),
-          api.get("/usuarios", { params: { size: 200, sort: "nome" } })
+          api.get("/usuarios", { params: { size: 200, sort: "nome" } }),
+          api.get("/prioridades/opcoes")
         ]);
         setSetores(extrairLista(respostaSetores.data));
         setEquipamentos(extrairLista(respostaEquipamentos.data));
         setSolicitantes(extrairLista(respostaUsuarios.data));
+        const opcoesPrioridade = extrairLista(respostaPrioridades.data).map((item) => item.nome);
+        setPrioridades(opcoesPrioridade.length > 0 ? opcoesPrioridade : prioridadesPadrao);
       } catch (falha) {
         const respostaErro = falha && falha.response ? falha.response : null;
         const detalhe = respostaErro && respostaErro.data ? respostaErro.data : null;
@@ -179,7 +119,7 @@ function AbrirChamado() {
       setMensagem("Chamado salvo com sucesso.");
       setTitulo("");
       setDescricao("");
-      setPrioridade("MEDIA");
+      setPrioridade(prioridades.length > 0 ? prioridades[0] : "MEDIA");
       setIdSetor("");
       setIdSolicitante("");
       setIdEquipamento("");
@@ -198,66 +138,66 @@ function AbrirChamado() {
 
   if (carregandoListas === true) {
     return (
-      <div style={estilos.container}>
-        <h2>Abrir Chamado</h2>
-        <p style={estilos.centro}>Carregando setores e equipamentos...</p>
+      <div className="cartao cartao--md">
+        <h2 className="titulo-pagina">Abrir Chamado</h2>
+        <p className="texto-suave">Carregando setores e equipamentos...</p>
       </div>
     );
   }
 
   return (
-    <div style={estilos.container}>
-      <h2>Abrir Chamado</h2>
-      <form onSubmit={salvar} style={estilos.formulario}>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Titulo</label>
-          <input style={estilos.campo} value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Exemplo: PC da recepcao com defeito" />
+    <div className="cartao cartao--md">
+      <h2 className="titulo-pagina">Abrir Chamado</h2>
+      <form onSubmit={salvar} className="formulario">
+        <div className="bloco">
+          <label className="rotulo">Titulo</label>
+          <input className="campo" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Exemplo: PC da recepcao com defeito" />
         </div>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Descricao</label>
-          <input style={estilos.campo} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva o problema" />
+        <div className="bloco">
+          <label className="rotulo">Descricao</label>
+          <input className="campo" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva o problema" />
         </div>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Prioridade</label>
-          <select style={estilos.campo} value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
+        <div className="bloco">
+          <label className="rotulo">Prioridade</label>
+          <select className="campo" value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
             {prioridades.map((item) => (
               <option key={item} value={item}>{item}</option>
             ))}
           </select>
         </div>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Setor do equipamento</label>
-          <select style={estilos.campo} value={idSetor} onChange={(e) => aoTrocarSetor(e.target.value)}>
+        <div className="bloco">
+          <label className="rotulo">Setor do equipamento</label>
+          <select className="campo" value={idSetor} onChange={(e) => aoTrocarSetor(e.target.value)}>
             <option value="">Todos os setores</option>
             {setores.map((item) => (
               <option key={item.id} value={item.id}>{item.nome} ({item.sigla})</option>
             ))}
           </select>
         </div>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Solicitante</label>
-          <select style={estilos.campo} value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)}>
+        <div className="bloco">
+          <label className="rotulo">Solicitante</label>
+          <select className="campo" value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)}>
             <option value="">Selecione o solicitante</option>
             {solicitantes.map((item) => (
               <option key={item.id} value={item.id}>{item.nome} ({item.email})</option>
             ))}
           </select>
         </div>
-        <div style={estilos.bloco}>
-          <label style={estilos.rotulo}>Equipamento</label>
-          <select style={estilos.campo} value={idEquipamento} onChange={(e) => setIdEquipamento(e.target.value)}>
+        <div className="bloco">
+          <label className="rotulo">Equipamento</label>
+          <select className="campo" value={idEquipamento} onChange={(e) => setIdEquipamento(e.target.value)}>
             <option value="">Selecione o equipamento</option>
             {equipamentosFiltrados.map((item) => (
               <option key={item.id} value={item.id}>{item.patrimonio} - {item.tipo} {item.marca} {item.modelo}</option>
             ))}
           </select>
         </div>
-        <button type="submit" style={estilos.botao} disabled={carregando}>
+        <button type="submit" className="botao" disabled={carregando}>
           {carregando ? "Salvando..." : "Salvar"}
         </button>
       </form>
-      {mensagem !== "" && <p style={estilos.mensagem}>{mensagem}</p>}
-      {erro !== "" && <p style={estilos.erro}>{erro}</p>}
+      {mensagem !== "" && <p className="mensagem-sucesso">{mensagem}</p>}
+      {erro !== "" && <p className="mensagem-erro">{erro}</p>}
     </div>
   );
 }
