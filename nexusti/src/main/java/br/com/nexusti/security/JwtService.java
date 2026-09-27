@@ -12,7 +12,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${JWT_SECRET:nexusti-chave-secreta-padrao-com-32-caracteres-minimo-123456}")
+    @Value("${api.security.token.secret}")
     private String segredo;
 
     @Value("${JWT_EXPIRATION:86400000}")
