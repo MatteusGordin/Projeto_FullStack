@@ -5,6 +5,9 @@ import br.com.nexusti.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,44 @@ public class UsuarioService {
         return repository.findById(id).orElse(null);
     }
 
+    public String perfilDoAtor() {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        if (autenticacao == null || autenticacao.getAuthorities() == null) {
+            return "";
+        }
+        return autenticacao.getAuthorities().stream()
+                .map(papel -> papel.getAuthority() == null ? "" : papel.getAuthority().trim().toUpperCase())
+                .filter(papel -> papel.equals("ROLE_ADMIN") || papel.equals("ROLE_TECNICO") || papel.equals("ROLE_USUARIO"))
+                .map(papel -> papel.replace("ROLE_", ""))
+                .findFirst()
+                .orElse("");
+    }
+
+    public boolean contextoAdministrativoAusente() {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        if (autenticacao == null || autenticacao.getAuthorities() == null) {
+            return true;
+        }
+        String nome = autenticacao.getName() == null ? "" : autenticacao.getName();
+        if (nome.equals("anonymousUser")) {
+            return true;
+        }
+        return autenticacao.getAuthorities().stream().noneMatch(papel ->
+                papel.getAuthority().equals("ROLE_ADMIN") || papel.getAuthority().equals("ROLE_TECNICO"));
+    }
+
+    public void validarGerenciamentoAdmin(String perfilAlvoAtual, String perfilDesejado) {
+        String alvoAtual = perfilAlvoAtual == null ? "" : perfilAlvoAtual.trim().toUpperCase();
+        String desejado = perfilDesejado == null ? "" : perfilDesejado.trim().toUpperCase();
+        if (contextoAdministrativoAusente()) {
+            return;
+        }
+        String ator = perfilDoAtor();
+        if (ator.equals("TECNICO") && (alvoAtual.equals("ADMIN") || desejado.equals("ADMIN"))) {
+            throw new AccessDeniedException("Apenas administradores podem gerenciar acessos de nivel ADMIN");
+        }
+    }
+
     public Usuario salvar(Usuario usuario) {
         boolean edicao = usuario.getId() != null && usuario.getId() != 0;
         String nomeValidado = usuario.getNome() == null ? "" : usuario.getNome().trim();
@@ -42,6 +83,24 @@ public class UsuarioService {
         }
         if (usuario.getIdSetor() == null || usuario.getIdSetor() <= 0) {
             throw new IllegalArgumentException("Setor do usuario invalido");
+        }
+        if (edicao) {
+            Usuario persistido = repository.findById(usuario.getId()).orElse(null);
+            if (persistido == null) {
+                throw new IllegalArgumentException("Usuario nao encontrado");
+            }
+            String perfilAtual = persistido.getPerfil() == null ? "" : persistido.getPerfil().trim().toUpperCase();
+            validarGerenciamentoAdmin(perfilAtual, perfilValidado);
+            boolean eraAdminAtivo = perfilAtual.equals("ADMIN") && (persistido.getAtivo() == null || persistido.getAtivo());
+            boolean viraNaoAdminOuInativo = perfilValidado.equals("ADMIN") == false || (usuario.getAtivo() != null && usuario.getAtivo() == false);
+            if (eraAdminAtivo && viraNaoAdminOuInativo) {
+                long totalAdmins = repository.countByPerfilAndAtivo("ADMIN", true);
+                if (totalAdmins <= 1) {
+                    throw new IllegalArgumentException("Nao e possivel remover o ultimo administrador ativo");
+                }
+            }
+        } else {
+            validarGerenciamentoAdmin("", perfilValidado);
         }
         usuario.setNome(nomeValidado);
         usuario.setEmail(emailValidado);
@@ -68,6 +127,18 @@ public class UsuarioService {
     }
 
     public void excluir(int id) {
+        Usuario alvo = repository.findById(id).orElse(null);
+        if (alvo == null) {
+            return;
+        }
+        String perfilAlvo = alvo.getPerfil() == null ? "" : alvo.getPerfil().trim().toUpperCase();
+        validarGerenciamentoAdmin(perfilAlvo, perfilAlvo);
+        if (perfilAlvo.equals("ADMIN") && (alvo.getAtivo() == null || alvo.getAtivo())) {
+            long totalAdmins = repository.countByPerfilAndAtivo("ADMIN", true);
+            if (totalAdmins <= 1) {
+                throw new IllegalArgumentException("Nao e possivel excluir o ultimo administrador ativo");
+            }
+        }
         repository.deleteById(id);
     }
 }

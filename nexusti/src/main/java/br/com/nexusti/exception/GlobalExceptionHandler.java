@@ -2,6 +2,7 @@ package br.com.nexusti.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -50,5 +51,13 @@ public class GlobalExceptionHandler {
         Map<String, String> corpo = new HashMap<>();
         corpo.put("mensagem", "Usuario desativado. Contate o administrador");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpo);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> tratarAcessoNegado(AccessDeniedException ex) {
+        String texto = ex.getMessage() == null ? "Acesso negado" : ex.getMessage();
+        Map<String, String> corpo = new HashMap<>();
+        corpo.put("mensagem", texto);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(corpo);
     }
 }

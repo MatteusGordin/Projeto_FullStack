@@ -35,9 +35,18 @@ CREATE TABLE chamado (
     id_solicitante INTEGER NOT NULL,
     id_tecnico INTEGER,
     id_equipamento INTEGER NOT NULL,
+    solucao TEXT,
     CONSTRAINT fk_chamado_solicitante FOREIGN KEY (id_solicitante) REFERENCES usuario(id),
     CONSTRAINT fk_chamado_tecnico FOREIGN KEY (id_tecnico) REFERENCES usuario(id),
     CONSTRAINT fk_chamado_equipamento FOREIGN KEY (id_equipamento) REFERENCES equipamento(id)
+);
+
+CREATE TABLE IF NOT EXISTS prioridade (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(30) NOT NULL UNIQUE,
+    cor VARCHAR(20),
+    ordem INTEGER,
+    ativa BOOLEAN
 );
 
 CREATE TABLE historico_chamado (

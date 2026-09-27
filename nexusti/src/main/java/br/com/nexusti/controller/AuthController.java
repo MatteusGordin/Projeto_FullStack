@@ -66,16 +66,18 @@ public class AuthController {
     }
 
     @GetMapping("/perfil")
-    public ResponseEntity<Map<String, String>> perfil(Authentication autenticacao) {
+    public ResponseEntity<Map<String, Object>> perfil(Authentication autenticacao) {
         String email = autenticacao == null ? "" : autenticacao.getName();
         Usuario usuario = usuarioRepository.findByEmail(email == null ? "" : email.trim()).orElse(null);
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Map<String, String> corpo = new HashMap<>();
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("id", usuario.getId());
         corpo.put("email", usuario.getEmail());
         corpo.put("nome", usuario.getNome());
         corpo.put("perfil", usuario.getPerfil());
+        corpo.put("idSetor", usuario.getIdSetor());
         return ResponseEntity.ok(corpo);
     }
 }

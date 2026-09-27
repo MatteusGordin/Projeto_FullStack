@@ -1,5 +1,7 @@
 package br.com.nexusti.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,6 +31,7 @@ public class Usuario implements UserDetails {
     private String email;
     @NotBlank
     @Size(min = 4, max = 100)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
     @NotBlank
     private String perfil;
@@ -105,6 +108,7 @@ public class Usuario implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String papel = perfil == null ? "" : perfil.trim().toUpperCase();
         if (papel.startsWith("ROLE_") == false) {
@@ -114,31 +118,37 @@ public class Usuario implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return senha;
     }
 
     @Override
+    @JsonIgnore
     public String getUsername() {
         return email;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
         return ativo == null || ativo;
     }

@@ -33,11 +33,13 @@ public class Chamado {
     private Integer idTecnico;
     @NotNull
     private Integer idEquipamento;
+    @Size(max = 2000)
+    private String solucao;
 
     public Chamado() {
     }
 
-    public Chamado(Integer id, String titulo, String descricao, String status, String prioridade, LocalDateTime dataAbertura, LocalDateTime dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento) {
+    public Chamado(Integer id, String titulo, String descricao, String status, String prioridade, LocalDateTime dataAbertura, LocalDateTime dataFechamento, Integer idSolicitante, Integer idTecnico, Integer idEquipamento, String solucao) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -48,6 +50,7 @@ public class Chamado {
         this.idSolicitante = idSolicitante;
         this.idTecnico = idTecnico;
         this.idEquipamento = idEquipamento;
+        this.solucao = solucao;
     }
 
     public Integer getId() {
@@ -128,5 +131,13 @@ public class Chamado {
 
     public void setIdEquipamento(Integer idEquipamento) {
         this.idEquipamento = idEquipamento;
+    }
+
+    public String getSolucao() {
+        return solucao;
+    }
+
+    public void setSolucao(String solucao) {
+        this.solucao = solucao;
     }
 }

@@ -18,6 +18,13 @@ function formatarData(texto) {
   return String(texto).replace("T", " ").slice(0, 16);
 }
 
+function textoOuTraco(texto) {
+  if (texto === null || texto === undefined || String(texto).trim() === "") {
+    return "-";
+  }
+  return String(texto);
+}
+
 function ListarChamados() {
   const [chamados, setChamados] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -42,6 +49,21 @@ function ListarChamados() {
     carregar();
   }, [ordenacao]);
 
+  function setorExibido(item) {
+    const nome = item.nomeSetorSolicitante ? String(item.nomeSetorSolicitante).trim() : "";
+    const sigla = item.siglaSetorSolicitante ? String(item.siglaSetorSolicitante).trim() : "";
+    if (nome !== "" && sigla !== "") {
+      return nome + " (" + sigla + ")";
+    }
+    if (nome !== "") {
+      return nome;
+    }
+    if (sigla !== "") {
+      return sigla;
+    }
+    return "-";
+  }
+
   function corpo() {
     if (carregando === true) {
       return <p className="texto-suave">Carregando chamados...</p>;
@@ -60,6 +82,8 @@ function ListarChamados() {
               <th>Titulo</th>
               <th>Status</th>
               <th>Prioridade</th>
+              <th>Solicitante</th>
+              <th>Setor</th>
               <th>Abertura</th>
               <th>Ver</th>
             </tr>
@@ -72,6 +96,8 @@ function ListarChamados() {
                 <td>
                   <span className={classeBadge(item.prioridade)}>{item.prioridade ? item.prioridade : "-"}</span>
                 </td>
+                <td>{textoOuTraco(item.nomeSolicitante)}</td>
+                <td>{setorExibido(item)}</td>
                 <td>{formatarData(item.dataAbertura)}</td>
                 <td>
                   <Link to={"/chamado/" + item.id}>Detalhes</Link>

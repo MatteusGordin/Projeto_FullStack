@@ -1,5 +1,6 @@
 package br.com.nexusti.controller;
 
+import br.com.nexusti.dto.ChamadoResposta;
 import br.com.nexusti.model.Chamado;
 import br.com.nexusti.service.ChamadoService;
 import jakarta.validation.Valid;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +24,8 @@ public class ChamadoController {
     private ChamadoService service;
 
     @GetMapping
-    public Page<Chamado> listarTodos(Pageable pageable) {
-        return service.listarTodos(pageable);
+    public Page<ChamadoResposta> listarTodos(Pageable pageable) {
+        return service.listarRespostas(pageable);
     }
 
     @GetMapping("/metricas")
@@ -39,8 +42,8 @@ public class ChamadoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Chamado> buscarPorId(@PathVariable int id) {
-        Chamado encontrado = service.buscarAcessivel(id);
+    public ResponseEntity<ChamadoResposta> buscarPorId(@PathVariable int id) {
+        ChamadoResposta encontrado = service.buscarRespostaAcessivel(id);
         if (encontrado == null) {
             return ResponseEntity.notFound().build();
         }
@@ -48,26 +51,66 @@ public class ChamadoController {
     }
 
     @PostMapping
-    public ResponseEntity<Chamado> criar(@Valid @RequestBody Chamado chamado) {
+    public ResponseEntity<ChamadoResposta> criar(@Valid @RequestBody Chamado chamado) {
         Chamado salvo = service.salvar(chamado);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.paraResposta(salvo));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Chamado> atualizar(@PathVariable int id, @Valid @RequestBody Chamado dados) {
+    public ResponseEntity<ChamadoResposta> atualizar(@PathVariable int id, @Valid @RequestBody Chamado dados) {
         Chamado atual = service.buscarAcessivel(id);
         if (atual == null) {
             return ResponseEntity.notFound().build();
         }
+        String statusAnterior = atual.getStatus() == null ? "" : atual.getStatus().trim().toUpperCase();
+        String statusNovo = dados.getStatus() == null ? statusAnterior : dados.getStatus().trim().toUpperCase();
+        if (statusNovo.isEmpty()) {
+            statusNovo = statusAnterior;
+        }
+        if (statusNovo.equals(statusAnterior) == false && service.acessoAmplo() == false) {
+            throw new AccessDeniedException("Apenas administradores e tecnicos podem alterar o status");
+        }
+        if (statusNovo.equals("FECHADO") && statusAnterior.equals("FECHADO") == false) {
+            if (service.acessoAmplo() == false) {
+                throw new AccessDeniedException("Apenas administradores e tecnicos podem concluir chamados");
+            }
+            String solucaoRecebida = dados.getSolucao() == null ? "" : dados.getSolucao().trim();
+            if (solucaoRecebida.length() < 5) {
+                throw new IllegalArgumentException("Solucao obrigatoria para concluir o chamado");
+            }
+            atual.setSolucao(solucaoRecebida);
+        } else if (dados.getSolucao() != null && service.acessoAmplo()) {
+            atual.setSolucao(dados.getSolucao());
+        }
         atual.setTitulo(dados.getTitulo());
         atual.setDescricao(dados.getDescricao());
-        atual.setStatus(dados.getStatus());
+        atual.setStatus(statusNovo.isEmpty() ? atual.getStatus() : statusNovo);
         atual.setPrioridade(dados.getPrioridade());
-        atual.setDataFechamento(dados.getDataFechamento());
-        atual.setIdSolicitante(dados.getIdSolicitante());
-        atual.setIdTecnico(dados.getIdTecnico());
-        atual.setIdEquipamento(dados.getIdEquipamento());
-        return ResponseEntity.ok(service.salvar(atual));
+        if (service.acessoAmplo()) {
+            atual.setDataFechamento(dados.getDataFechamento());
+            atual.setIdSolicitante(dados.getIdSolicitante());
+            atual.setIdTecnico(dados.getIdTecnico());
+            atual.setIdEquipamento(dados.getIdEquipamento());
+        } else {
+            atual.setIdEquipamento(dados.getIdEquipamento());
+        }
+        Chamado salvo = service.salvar(atual);
+        return ResponseEntity.ok(service.paraResposta(salvo));
+    }
+
+    @PutMapping("/{id}/concluir")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
+    public ResponseEntity<ChamadoResposta> concluir(@PathVariable int id, @RequestBody Map<String, String> corpo) {
+        Chamado acessivel = service.buscarAcessivel(id);
+        if (acessivel == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String solucao = corpo == null ? "" : corpo.get("solucao");
+        Chamado fechado = service.concluir(id, solucao);
+        if (fechado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(service.paraResposta(fechado));
     }
 
     @DeleteMapping("/{id}")

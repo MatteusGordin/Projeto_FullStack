@@ -6,13 +6,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PrioridadeService {
 
     @Autowired
     private PrioridadeRepository repository;
+
+    public static final Map<String, String> CORES_PERMITIDAS = criarPaleta();
+
+    private static Map<String, String> criarPaleta() {
+        Map<String, String> paleta = new HashMap<>();
+        paleta.put("VERMELHO", "#EF4444");
+        paleta.put("LARANJA", "#F97316");
+        paleta.put("AMARELO", "#EAB308");
+        paleta.put("VERDE", "#22C55E");
+        paleta.put("AZUL", "#3B82F6");
+        paleta.put("CINZA", "#64748B");
+        paleta.put("#EF4444", "#EF4444");
+        paleta.put("#F97316", "#F97316");
+        paleta.put("#EAB308", "#EAB308");
+        paleta.put("#22C55E", "#22C55E");
+        paleta.put("#3B82F6", "#3B82F6");
+        paleta.put("#64748B", "#64748B");
+        return paleta;
+    }
 
     public Page<Prioridade> listarTodos(Pageable pageable) {
         return repository.findAll(pageable);
@@ -36,12 +57,16 @@ public class PrioridadeService {
         if (existente != null && (edicao == false || existente.getId().equals(prioridade.getId()) == false)) {
             throw new IllegalArgumentException("Prioridade ja cadastrada");
         }
-        String corValidada = prioridade.getCor() == null ? "" : prioridade.getCor().trim();
-        if (corValidada.isEmpty()) {
-            corValidada = "#64748B";
+        String corRecebida = prioridade.getCor() == null ? "" : prioridade.getCor().trim().toUpperCase();
+        if (corRecebida.isEmpty()) {
+            corRecebida = "#64748B";
+        }
+        String corNormalizada = CORES_PERMITIDAS.get(corRecebida);
+        if (corNormalizada == null) {
+            throw new IllegalArgumentException("Cor da prioridade invalida");
         }
         prioridade.setNome(nomeValidado);
-        prioridade.setCor(corValidada);
+        prioridade.setCor(corNormalizada);
         if (prioridade.getOrdem() == null) {
             prioridade.setOrdem(0);
         }

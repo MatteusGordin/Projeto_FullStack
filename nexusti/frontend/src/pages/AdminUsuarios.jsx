@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { lerPerfil } from "../auth";
 
-const perfis = ["ADMIN", "TECNICO", "USUARIO"];
+const todosPerfis = ["ADMIN", "TECNICO", "USUARIO"];
 
 function extrairLista(dados) {
   if (Array.isArray(dados)) {
@@ -27,19 +28,34 @@ function AdminUsuarios() {
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [perfilLogado, setPerfilLogado] = useState("");
+
+  const souTecnico = perfilLogado === "TECNICO";
+  const perfis = souTecnico === true ? ["TECNICO", "USUARIO"] : todosPerfis;
 
   async function carregar() {
     setCarregando(true);
     setErro("");
     try {
-      const [respostaUsuarios, respostaSetores] = await Promise.all([
+      const [respostaUsuarios, respostaSetores, dadosPerfil] = await Promise.all([
         api.get("/usuarios", { params: { size: 200, sort: "nome" } }),
-        api.get("/setores/opcoes")
+        api.get("/setores/opcoes"),
+        lerPerfil()
       ]);
       setUsuarios(extrairLista(respostaUsuarios.data));
       setSetores(extrairLista(respostaSetores.data));
+      const papel = dadosPerfil && dadosPerfil.perfil ? String(dadosPerfil.perfil).trim().toUpperCase() : "";
+      setPerfilLogado(papel);
+      if (papel === "TECNICO" && perfil === "ADMIN") {
+        setPerfil("USUARIO");
+      }
     } catch (falha) {
-      setErro("Falha ao carregar usuarios. Tente novamente.");
+      const status = falha && falha.response ? falha.response.status : 0;
+      if (status === 403) {
+        setErro("Acesso negado. Apenas administradores e tecnicos acessam usuarios.");
+      } else {
+        setErro("Falha ao carregar usuarios. Tente novamente.");
+      }
     } finally {
       setCarregando(false);
     }
@@ -60,11 +76,16 @@ function AdminUsuarios() {
   }
 
   function editar(item) {
+    const papelAlvo = item.perfil ? String(item.perfil).trim().toUpperCase() : "";
+    if (souTecnico === true && papelAlvo === "ADMIN") {
+      setErro("Apenas administradores podem gerenciar acessos de nivel ADMIN.");
+      return;
+    }
     setIdEdicao(item.id);
     setNome(item.nome);
     setEmail(item.email);
     setSenha("");
-    setPerfil(item.perfil);
+    setPerfil(papelAlvo === "" ? "USUARIO" : papelAlvo);
     setIdSetor(String(item.idSetor));
     setAtivo(item.ativo === null || item.ativo === undefined ? true : item.ativo);
     setMensagem("");
@@ -88,6 +109,10 @@ function AdminUsuarios() {
       setErro("Selecione um perfil valido.");
       return;
     }
+    if (souTecnico === true && perfil === "ADMIN") {
+      setErro("Apenas administradores podem gerenciar acessos de nivel ADMIN.");
+      return;
+    }
     if (idSetor === "" || Number.isNaN(setorNumero) || setorNumero <= 0) {
       setErro("Selecione o setor do usuario.");
       return;
@@ -109,8 +134,11 @@ function AdminUsuarios() {
       limpar();
       await carregar();
     } catch (falha) {
+      const status = falha && falha.response ? falha.response.status : 0;
       const detalhe = falha && falha.response && falha.response.data ? falha.response.data : null;
-      if (detalhe && detalhe.mensagem) {
+      if (status === 403) {
+        setErro("Apenas administradores podem gerenciar acessos de nivel ADMIN.");
+      } else if (detalhe && detalhe.mensagem) {
         setErro(detalhe.mensagem);
       } else {
         setErro("Falha ao salvar usuario. Tente novamente.");
@@ -123,6 +151,11 @@ function AdminUsuarios() {
   async function excluir(item) {
     setMensagem("");
     setErro("");
+    const papelAlvo = item.perfil ? String(item.perfil).trim().toUpperCase() : "";
+    if (souTecnico === true && papelAlvo === "ADMIN") {
+      setErro("Apenas administradores podem gerenciar acessos de nivel ADMIN.");
+      return;
+    }
     if (window.confirm("Excluir o usuario " + item.nome + "?") === false) {
       return;
     }
@@ -134,13 +167,26 @@ function AdminUsuarios() {
       setMensagem("Usuario excluido com sucesso.");
       await carregar();
     } catch (falha) {
-      setErro("Falha ao excluir usuario. Tente novamente.");
+      const status = falha && falha.response ? falha.response.status : 0;
+      if (status === 403) {
+        setErro("Apenas administradores podem gerenciar acessos de nivel ADMIN.");
+      } else {
+        setErro("Falha ao excluir usuario. Tente novamente.");
+      }
     }
+  }
+
+  function acaoBloqueada(item) {
+    const papelAlvo = item.perfil ? String(item.perfil).trim().toUpperCase() : "";
+    return souTecnico === true && papelAlvo === "ADMIN";
   }
 
   return (
     <div className="cartao cartao--lg">
       <h2 className="titulo-pagina">Usuarios</h2>
+      {souTecnico === true && (
+        <p className="texto-suave">Voce esta logado como TECNICO. Acoes sobre acessos ADMIN estao bloqueadas.</p>
+      )}
       <form onSubmit={salvar} className="formulario">
         <div className="bloco">
           <label className="rotulo">Nome</label>
@@ -214,8 +260,8 @@ function AdminUsuarios() {
                   <td>{item.ativo === false ? "Inativo" : "Ativo"}</td>
                   <td>
                     <div className="linha-acoes">
-                      <button type="button" className="botao" onClick={() => editar(item)}>Editar</button>
-                      <button type="button" className="botao botao--perigo" onClick={() => excluir(item)}>Excluir</button>
+                      <button type="button" className="botao" onClick={() => editar(item)} disabled={acaoBloqueada(item)} title={acaoBloqueada(item) ? "Apenas administradores podem gerenciar ADMIN" : "Editar"}>Editar</button>
+                      <button type="button" className="botao botao--perigo" onClick={() => excluir(item)} disabled={acaoBloqueada(item)} title={acaoBloqueada(item) ? "Apenas administradores podem gerenciar ADMIN" : "Excluir"}>Excluir</button>
                     </div>
                   </td>
                 </tr>

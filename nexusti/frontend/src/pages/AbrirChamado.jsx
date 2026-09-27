@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { lerPerfil } from "../auth";
 
 const prioridadesPadrao = ["BAIXA", "MEDIA", "ALTA", "URGENTE"];
 
@@ -28,23 +29,48 @@ function AbrirChamado() {
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [papel, setPapel] = useState("");
 
   useEffect(() => {
     async function carregarOpcoes() {
       setCarregandoListas(true);
       setErro("");
       try {
-        const [respostaSetores, respostaEquipamentos, respostaUsuarios, respostaPrioridades] = await Promise.all([
+        const dadosPerfil = await lerPerfil().catch(() => null);
+        const papelAtual = dadosPerfil && dadosPerfil.perfil ? String(dadosPerfil.perfil).trim().toUpperCase() : "";
+        setPapel(papelAtual);
+        const idLogado = dadosPerfil && dadosPerfil.id ? String(dadosPerfil.id) : "";
+        const [respostaSetores, respostaEquipamentos, respostaPrioridades] = await Promise.all([
           api.get("/setores/opcoes"),
           api.get("/equipamentos/opcoes"),
-          api.get("/usuarios", { params: { size: 200, sort: "nome" } }),
           api.get("/prioridades/opcoes")
         ]);
         setSetores(extrairLista(respostaSetores.data));
         setEquipamentos(extrairLista(respostaEquipamentos.data));
-        setSolicitantes(extrairLista(respostaUsuarios.data));
         const opcoesPrioridade = extrairLista(respostaPrioridades.data).map((item) => item.nome);
-        setPrioridades(opcoesPrioridade.length > 0 ? opcoesPrioridade : prioridadesPadrao);
+        const listaPrioridades = opcoesPrioridade.length > 0 ? opcoesPrioridade : prioridadesPadrao;
+        setPrioridades(listaPrioridades);
+        if (listaPrioridades.includes(prioridade) === false) {
+          setPrioridade(listaPrioridades[0]);
+        }
+        const equipe = papelAtual === "ADMIN" || papelAtual === "TECNICO";
+        if (equipe === true) {
+          try {
+            const respostaUsuarios = await api.get("/usuarios", { params: { size: 200, sort: "nome" } });
+            setSolicitantes(extrairLista(respostaUsuarios.data));
+          } catch (falhaUsuarios) {
+            setSolicitantes([]);
+          }
+        } else {
+          if (dadosPerfil && dadosPerfil.nome && idLogado !== "") {
+            setSolicitantes([{ id: dadosPerfil.id, nome: dadosPerfil.nome, email: dadosPerfil.email }]);
+          } else {
+            setSolicitantes([]);
+          }
+          if (idLogado !== "") {
+            setIdSolicitante(idLogado);
+          }
+        }
       } catch (falha) {
         const respostaErro = falha && falha.response ? falha.response : null;
         const detalhe = respostaErro && respostaErro.data ? respostaErro.data : null;
@@ -121,7 +147,10 @@ function AbrirChamado() {
       setDescricao("");
       setPrioridade(prioridades.length > 0 ? prioridades[0] : "MEDIA");
       setIdSetor("");
-      setIdSolicitante("");
+      const equipe = papel === "ADMIN" || papel === "TECNICO";
+      if (equipe === true) {
+        setIdSolicitante("");
+      }
       setIdEquipamento("");
     } catch (falha) {
       const respostaErro = falha && falha.response ? falha.response : null;
@@ -144,6 +173,8 @@ function AbrirChamado() {
       </div>
     );
   }
+
+  const equipe = papel === "ADMIN" || papel === "TECNICO";
 
   return (
     <div className="cartao cartao--md">
@@ -176,7 +207,7 @@ function AbrirChamado() {
         </div>
         <div className="bloco">
           <label className="rotulo">Solicitante</label>
-          <select className="campo" value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)}>
+          <select className="campo" value={idSolicitante} onChange={(e) => setIdSolicitante(e.target.value)} disabled={equipe === false}>
             <option value="">Selecione o solicitante</option>
             {solicitantes.map((item) => (
               <option key={item.id} value={item.id}>{item.nome} ({item.email})</option>

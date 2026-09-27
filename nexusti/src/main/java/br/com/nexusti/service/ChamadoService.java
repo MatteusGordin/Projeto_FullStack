@@ -1,15 +1,19 @@
 package br.com.nexusti.service;
 
+import br.com.nexusti.dto.ChamadoResposta;
 import br.com.nexusti.model.Chamado;
+import br.com.nexusti.model.Setor;
 import br.com.nexusti.model.Usuario;
 import br.com.nexusti.repository.ChamadoRepository;
 import br.com.nexusti.repository.PrioridadeRepository;
+import br.com.nexusti.repository.SetorRepository;
 import br.com.nexusti.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,9 @@ public class ChamadoService {
 
     @Autowired
     private UsuarioRepository usuarios;
+
+    @Autowired
+    private SetorRepository setores;
 
     @Autowired
     private PrioridadeRepository prioridades;
@@ -46,6 +53,10 @@ public class ChamadoService {
             return Page.empty(paginacao);
         }
         return repository.findByIdSolicitante(dono.getId(), paginacao);
+    }
+
+    public Page<ChamadoResposta> listarRespostas(Pageable pageable) {
+        return listarTodos(pageable).map(this::paraResposta);
     }
 
     public boolean acessoAmplo() {
@@ -80,6 +91,14 @@ public class ChamadoService {
         return chamado;
     }
 
+    public ChamadoResposta buscarRespostaAcessivel(int id) {
+        Chamado chamado = buscarAcessivel(id);
+        if (chamado == null) {
+            return null;
+        }
+        return paraResposta(chamado);
+    }
+
     public Chamado buscarPorId(int id) {
         return repository.findById(id).orElse(null);
     }
@@ -102,11 +121,81 @@ public class ChamadoService {
         chamado.setTitulo(tituloValidado);
         chamado.setDescricao(descricaoValidada);
         validarPrioridade(chamado);
+        String statusNormalizado = chamado.getStatus() == null ? "" : chamado.getStatus().trim().toUpperCase();
         if (chamado.getId() == null || chamado.getId() == 0) {
-            chamado.setStatus("ABERTO");
+            if (statusNormalizado.isEmpty()) {
+                chamado.setStatus("ABERTO");
+            } else {
+                chamado.setStatus(statusNormalizado);
+            }
             chamado.setDataAbertura(LocalDateTime.now());
         }
+        String statusAtual = chamado.getStatus() == null ? "" : chamado.getStatus().trim().toUpperCase();
+        if (statusAtual.equals("FECHADO")) {
+            String solucaoValidada = chamado.getSolucao() == null ? "" : chamado.getSolucao().trim();
+            if (solucaoValidada.length() < 5) {
+                throw new IllegalArgumentException("Solucao obrigatoria para concluir o chamado");
+            }
+            chamado.setSolucao(solucaoValidada);
+            chamado.setStatus("FECHADO");
+            if (chamado.getDataFechamento() == null) {
+                chamado.setDataFechamento(LocalDateTime.now());
+            }
+        }
         return repository.save(chamado);
+    }
+
+    public Chamado concluir(int id, String solucao) {
+        if (acessoAmplo() == false) {
+            throw new AccessDeniedException("Apenas administradores e tecnicos podem concluir chamados");
+        }
+        Chamado chamado = repository.findById(id).orElse(null);
+        if (chamado == null) {
+            return null;
+        }
+        String texto = solucao == null ? "" : solucao.trim();
+        if (texto.length() < 5) {
+            throw new IllegalArgumentException("Solucao obrigatoria para concluir o chamado");
+        }
+        chamado.setSolucao(texto);
+        chamado.setStatus("FECHADO");
+        chamado.setDataFechamento(LocalDateTime.now());
+        return repository.save(chamado);
+    }
+
+    public ChamadoResposta paraResposta(Chamado chamado) {
+        ChamadoResposta resposta = new ChamadoResposta();
+        resposta.setId(chamado.getId());
+        resposta.setTitulo(chamado.getTitulo());
+        resposta.setDescricao(chamado.getDescricao());
+        resposta.setStatus(chamado.getStatus());
+        resposta.setPrioridade(chamado.getPrioridade());
+        resposta.setDataAbertura(chamado.getDataAbertura());
+        resposta.setDataFechamento(chamado.getDataFechamento());
+        resposta.setIdSolicitante(chamado.getIdSolicitante());
+        resposta.setIdTecnico(chamado.getIdTecnico());
+        resposta.setIdEquipamento(chamado.getIdEquipamento());
+        resposta.setSolucao(chamado.getSolucao());
+        String nomeSolicitante = "";
+        String nomeSetor = "";
+        String siglaSetor = "";
+        if (chamado.getIdSolicitante() != null && chamado.getIdSolicitante() > 0) {
+            Usuario solicitante = usuarios.findById(chamado.getIdSolicitante()).orElse(null);
+            if (solicitante != null) {
+                nomeSolicitante = solicitante.getNome() == null ? "" : solicitante.getNome();
+                if (solicitante.getIdSetor() != null && solicitante.getIdSetor() > 0) {
+                    Setor setor = setores.findById(solicitante.getIdSetor()).orElse(null);
+                    if (setor != null) {
+                        nomeSetor = setor.getNome() == null ? "" : setor.getNome();
+                        siglaSetor = setor.getSigla() == null ? "" : setor.getSigla();
+                    }
+                }
+            }
+        }
+        resposta.setNomeSolicitante(nomeSolicitante);
+        resposta.setNomeSetorSolicitante(nomeSetor);
+        resposta.setSiglaSetorSolicitante(siglaSetor);
+        return resposta;
     }
 
     public void validarPrioridade(Chamado chamado) {

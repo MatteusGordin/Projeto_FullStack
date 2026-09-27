@@ -8,7 +8,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,11 +23,13 @@ public class UsuarioController {
     private UsuarioService service;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public Page<Usuario> listarTodos(Pageable pageable) {
         return service.listarTodos(pageable);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Usuario> buscarPorId(@PathVariable int id) {
         Usuario encontrado = service.buscarPorId(id);
         if (encontrado == null) {
@@ -36,6 +41,7 @@ public class UsuarioController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public ResponseEntity<Usuario> criar(@Valid @RequestBody Usuario usuario) {
+        exigirPermissaoAdmin("", usuario.getPerfil());
         Usuario salvo = service.salvar(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
@@ -47,6 +53,7 @@ public class UsuarioController {
         if (atual == null) {
             return ResponseEntity.notFound().build();
         }
+        exigirPermissaoAdmin(atual.getPerfil(), dados.getPerfil());
         atual.setNome(dados.getNome());
         atual.setEmail(dados.getEmail());
         atual.setSenha(dados.getSenha());
@@ -63,7 +70,25 @@ public class UsuarioController {
         if (atual == null) {
             return ResponseEntity.notFound().build();
         }
+        exigirPermissaoAdmin(atual.getPerfil(), atual.getPerfil());
         service.excluir(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private void exigirPermissaoAdmin(String perfilAlvoAtual, String perfilDesejado) {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        if (autenticacao == null || autenticacao.getAuthorities() == null) {
+            return;
+        }
+        boolean tecnico = autenticacao.getAuthorities().stream()
+                .anyMatch(papel -> papel.getAuthority() != null && papel.getAuthority().equals("ROLE_TECNICO"));
+        if (tecnico == false) {
+            return;
+        }
+        String alvo = perfilAlvoAtual == null ? "" : perfilAlvoAtual.trim().toUpperCase();
+        String desejado = perfilDesejado == null ? "" : perfilDesejado.trim().toUpperCase();
+        if (alvo.equals("ADMIN") || desejado.equals("ADMIN")) {
+            throw new AccessDeniedException("Apenas administradores podem gerenciar acessos de nivel ADMIN");
+        }
     }
 }

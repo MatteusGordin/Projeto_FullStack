@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
+const CORES = [
+  { rotulo: "Vermelho", valor: "#EF4444" },
+  { rotulo: "Laranja", valor: "#F97316" },
+  { rotulo: "Amarelo", valor: "#EAB308" },
+  { rotulo: "Verde", valor: "#22C55E" },
+  { rotulo: "Azul", valor: "#3B82F6" },
+  { rotulo: "Cinza", valor: "#64748B" }
+];
+
 function extrairLista(dados) {
   if (Array.isArray(dados)) {
     return dados;
@@ -71,6 +80,10 @@ function AdminPrioridades() {
       setErro("Informe a ordem da prioridade.");
       return;
     }
+    if (CORES.some((item) => item.valor === cor) === false) {
+      setErro("Selecione uma cor valida.");
+      return;
+    }
     if (salvando === true) {
       return;
     }
@@ -126,7 +139,16 @@ function AdminPrioridades() {
         </div>
         <div className="bloco">
           <label className="rotulo">Cor</label>
-          <input className="campo" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="#64748B" />
+          <select className="campo" value={cor} onChange={(e) => setCor(e.target.value)}>
+            {CORES.map((item) => (
+              <option key={item.valor} value={item.valor}>{item.rotulo} ({item.valor})</option>
+            ))}
+          </select>
+          <div className="linha-acoes" style={{ marginTop: "8px", alignItems: "center" }}>
+            <span className="texto-suave">Previa:</span>
+            <span style={{ display: "inline-block", width: "28px", height: "28px", borderRadius: "8px", backgroundColor: cor, border: "1px solid rgba(255,255,255,0.25)" }} />
+            <span className="texto-suave">{cor}</span>
+          </div>
         </div>
         <div className="bloco">
           <label className="rotulo">Ordem</label>
@@ -170,7 +192,12 @@ function AdminPrioridades() {
               {prioridades.map((item) => (
                 <tr key={item.id}>
                   <td>{item.nome}</td>
-                  <td>{item.cor}</td>
+                  <td>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ display: "inline-block", width: "18px", height: "18px", borderRadius: "6px", backgroundColor: item.cor ? item.cor : "#64748B", border: "1px solid rgba(255,255,255,0.25)" }} />
+                      {item.cor}
+                    </span>
+                  </td>
                   <td>{item.ordem}</td>
                   <td>{item.ativa === false ? "Inativa" : "Ativa"}</td>
                   <td>
