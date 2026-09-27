@@ -203,7 +203,7 @@ body {
   gap: var(--espaco-2);
   padding: var(--espaco-3);
   width: 100%;
-  max-width: 1024px;
+  max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -233,7 +233,7 @@ body {
 }
 
 .cartao--lg {
-  max-width: 800px;
+  max-width: 1120px;
   margin-left: auto;
   margin-right: auto;
 }

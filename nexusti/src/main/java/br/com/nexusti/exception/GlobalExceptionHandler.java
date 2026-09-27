@@ -1,5 +1,6 @@
 package br.com.nexusti.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -51,6 +52,13 @@ public class GlobalExceptionHandler {
         Map<String, String> corpo = new HashMap<>();
         corpo.put("mensagem", "Usuario desativado. Contate o administrador");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpo);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> tratarIntegridade(DataIntegrityViolationException ex) {
+        Map<String, String> corpo = new HashMap<>();
+        corpo.put("mensagem", "Registro ja cadastrado");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpo);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

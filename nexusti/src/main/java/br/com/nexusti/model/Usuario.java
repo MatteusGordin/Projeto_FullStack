@@ -2,6 +2,7 @@ package br.com.nexusti.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +29,7 @@ public class Usuario implements UserDetails {
     @NotBlank
     @Email
     @Size(max = 100)
+    @Column(unique = true)
     private String email;
     @NotBlank
     @Size(min = 4, max = 100)

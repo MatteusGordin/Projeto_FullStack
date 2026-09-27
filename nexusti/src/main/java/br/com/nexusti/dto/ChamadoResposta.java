@@ -20,6 +20,7 @@ public class ChamadoResposta {
     private String nomeSolicitante;
     private String nomeSetorSolicitante;
     private String siglaSetorSolicitante;
+    private String corPrioridade;
 
     public ChamadoResposta() {
     }
@@ -134,5 +135,13 @@ public class ChamadoResposta {
 
     public void setSiglaSetorSolicitante(String siglaSetorSolicitante) {
         this.siglaSetorSolicitante = siglaSetorSolicitante;
+    }
+
+    public String getCorPrioridade() {
+        return corPrioridade;
+    }
+
+    public void setCorPrioridade(String corPrioridade) {
+        this.corPrioridade = corPrioridade;
     }
 }

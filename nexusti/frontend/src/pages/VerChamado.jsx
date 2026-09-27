@@ -126,6 +126,10 @@ function VerChamado() {
       : chamado.nomeSetorSolicitante
     : "-";
   const solucaoExibida = chamado.solucao && chamado.solucao !== "" ? chamado.solucao : "-";
+  const corPrioridadeAtual = chamado.corPrioridade && String(chamado.corPrioridade).trim() !== "" ? String(chamado.corPrioridade).trim() : "";
+  const seloPrioridade = corPrioridadeAtual !== ""
+    ? <span className="badge" style={{ borderColor: corPrioridadeAtual, color: corPrioridadeAtual }}>{chamado.prioridade ? chamado.prioridade : "-"}</span>
+    : <span className={classeBadge(chamado.prioridade)}>{chamado.prioridade ? chamado.prioridade : "-"}</span>;
 
   return (
     <div className="cartao cartao--md">
@@ -134,7 +138,7 @@ function VerChamado() {
         <p>Titulo: {chamado.titulo}</p>
         <p>Descricao: {chamado.descricao}</p>
         <p>Status: {chamado.status}</p>
-        <p>Prioridade: <span className={classeBadge(chamado.prioridade)}>{chamado.prioridade ? chamado.prioridade : "-"}</span></p>
+        <p>Prioridade: {seloPrioridade}</p>
         <p>Solicitante: {nomeSolicitante}</p>
         <p>Setor do solicitante: {setorSolicitante}</p>
         <p>Abertura: {formatarData(chamado.dataAbertura)}</p>

@@ -89,6 +89,10 @@ public class UsuarioService {
             if (persistido == null) {
                 throw new IllegalArgumentException("Usuario nao encontrado");
             }
+            String emailAtual = persistido.getEmail() == null ? "" : persistido.getEmail().trim();
+            if (emailAtual.equals(emailValidado) == false && repository.existsByEmailAndIdNot(emailValidado, usuario.getId())) {
+                throw new IllegalArgumentException("Email ja cadastrado");
+            }
             String perfilAtual = persistido.getPerfil() == null ? "" : persistido.getPerfil().trim().toUpperCase();
             validarGerenciamentoAdmin(perfilAtual, perfilValidado);
             boolean eraAdminAtivo = perfilAtual.equals("ADMIN") && (persistido.getAtivo() == null || persistido.getAtivo());
@@ -101,6 +105,9 @@ public class UsuarioService {
             }
         } else {
             validarGerenciamentoAdmin("", perfilValidado);
+            if (repository.existsByEmail(emailValidado)) {
+                throw new IllegalArgumentException("Email ja cadastrado");
+            }
         }
         usuario.setNome(nomeValidado);
         usuario.setEmail(emailValidado);

@@ -24,8 +24,13 @@ public class ChamadoController {
     private ChamadoService service;
 
     @GetMapping
-    public Page<ChamadoResposta> listarTodos(Pageable pageable) {
-        return service.listarRespostas(pageable);
+    public Page<ChamadoResposta> listarTodos(Pageable pageable,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String prioridade,
+            @RequestParam(required = false) String idSetor,
+            @RequestParam(required = false) String dataInicio,
+            @RequestParam(required = false) String dataFim) {
+        return service.listarFiltrado(status, prioridade, idSetor, dataInicio, dataFim, pageable);
     }
 
     @GetMapping("/metricas")

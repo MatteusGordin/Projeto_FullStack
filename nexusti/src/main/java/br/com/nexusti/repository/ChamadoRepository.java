@@ -4,11 +4,12 @@ import br.com.nexusti.model.Chamado;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 
-public interface ChamadoRepository extends JpaRepository<Chamado, Integer> {
+public interface ChamadoRepository extends JpaRepository<Chamado, Integer>, JpaSpecificationExecutor<Chamado> {
     Page<Chamado> findByIdSolicitante(Integer idSolicitante, Pageable pageable);
     long countByStatus(String status);
     long countByStatusAndIdSolicitante(String status, Integer idSolicitante);

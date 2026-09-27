@@ -13,12 +13,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.criteria.Predicate;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -38,7 +44,7 @@ public class ChamadoService {
 
     public Pageable paginacaoPadrao(Pageable pageable) {
         if (pageable.getSort().isUnsorted()) {
-            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "dataAbertura"));
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.ASC, "status").and(Sort.by(Sort.Direction.DESC, "dataAbertura")));
         }
         return pageable;
     }
@@ -57,6 +63,111 @@ public class ChamadoService {
 
     public Page<ChamadoResposta> listarRespostas(Pageable pageable) {
         return listarTodos(pageable).map(this::paraResposta);
+    }
+
+    public Page<ChamadoResposta> listarFiltrado(String status, String prioridade, String idSetor, String dataInicio, String dataFim, Pageable pageable) {
+        Pageable paginacao = paginacaoPadrao(pageable);
+        String statusNormalizado = status == null ? "" : status.trim().toUpperCase();
+        String prioridadeNormalizada = prioridade == null ? "" : prioridade.trim().toUpperCase();
+        Integer setorValidado = converterSetor(idSetor);
+        LocalDateTime inicio = parseInicio(dataInicio);
+        LocalDateTime fim = parseFim(dataFim);
+        if (statusNormalizado.isEmpty() && prioridadeNormalizada.isEmpty() && setorValidado == null && inicio == null && fim == null) {
+            return listarRespostas(pageable);
+        }
+        Integer solicitante = null;
+        if (acessoAmplo() == false) {
+            Usuario dono = usuarioLogado();
+            if (dono == null || dono.getId() == null) {
+                return Page.empty(paginacao);
+            }
+            solicitante = dono.getId();
+        }
+        List<Integer> idsSetor = null;
+        if (setorValidado != null) {
+            idsSetor = new ArrayList<>();
+            for (Usuario membro : usuarios.findByIdSetor(setorValidado)) {
+                if (membro != null && membro.getId() != null) {
+                    idsSetor.add(membro.getId());
+                }
+            }
+            if (idsSetor.isEmpty()) {
+                return Page.empty(paginacao);
+            }
+        }
+        final String statusFiltro = statusNormalizado.isEmpty() ? null : statusNormalizado;
+        final String prioridadeFiltro = prioridadeNormalizada.isEmpty() ? null : prioridadeNormalizada;
+        final List<Integer> idsSetorFiltro = idsSetor;
+        final Integer solicitanteFiltro = solicitante;
+        final LocalDateTime inicioFiltro = inicio;
+        final LocalDateTime fimFiltro = fim;
+        Specification<Chamado> especificacao = (raiz, consulta, construtor) -> {
+            List<Predicate> predicados = new ArrayList<>();
+            if (solicitanteFiltro != null) {
+                predicados.add(construtor.equal(raiz.get("idSolicitante"), solicitanteFiltro));
+            }
+            if (statusFiltro != null) {
+                predicados.add(construtor.equal(raiz.get("status"), statusFiltro));
+            }
+            if (prioridadeFiltro != null) {
+                predicados.add(construtor.equal(raiz.get("prioridade"), prioridadeFiltro));
+            }
+            if (idsSetorFiltro != null) {
+                predicados.add(raiz.get("idSolicitante").in(idsSetorFiltro));
+            }
+            if (inicioFiltro != null && fimFiltro != null) {
+                predicados.add(construtor.between(raiz.<LocalDateTime>get("dataAbertura"), inicioFiltro, fimFiltro));
+            } else if (inicioFiltro != null) {
+                predicados.add(construtor.greaterThanOrEqualTo(raiz.<LocalDateTime>get("dataAbertura"), inicioFiltro));
+            } else if (fimFiltro != null) {
+                predicados.add(construtor.lessThanOrEqualTo(raiz.<LocalDateTime>get("dataAbertura"), fimFiltro));
+            }
+            return construtor.and(predicados.toArray(new Predicate[0]));
+        };
+        return repository.findAll(especificacao, paginacao).map(this::paraResposta);
+    }
+
+    public Integer converterSetor(String texto) {
+        String valor = texto == null ? "" : texto.trim();
+        if (valor.isEmpty()) {
+            return null;
+        }
+        try {
+            int numero = Integer.parseInt(valor);
+            return numero > 0 ? numero : null;
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Setor invalido");
+        }
+    }
+
+    public LocalDateTime parseInicio(String texto) {
+        String valor = texto == null ? "" : texto.trim();
+        if (valor.isEmpty()) {
+            return null;
+        }
+        try {
+            if (valor.length() == 10) {
+                return LocalDate.parse(valor).atStartOfDay();
+            }
+            return LocalDateTime.parse(valor);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Periodo invalido");
+        }
+    }
+
+    public LocalDateTime parseFim(String texto) {
+        String valor = texto == null ? "" : texto.trim();
+        if (valor.isEmpty()) {
+            return null;
+        }
+        try {
+            if (valor.length() == 10) {
+                return LocalDate.parse(valor).atTime(23, 59, 59);
+            }
+            return LocalDateTime.parse(valor);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Periodo invalido");
+        }
     }
 
     public boolean acessoAmplo() {
@@ -195,7 +306,24 @@ public class ChamadoService {
         resposta.setNomeSolicitante(nomeSolicitante);
         resposta.setNomeSetorSolicitante(nomeSetor);
         resposta.setSiglaSetorSolicitante(siglaSetor);
+        resposta.setCorPrioridade(corAtualPrioridade(chamado.getPrioridade()));
         return resposta;
+    }
+
+    public String corAtualPrioridade(String prioridade) {
+        String chave = prioridade == null ? "" : prioridade.trim();
+        if (chave.isEmpty()) {
+            return "";
+        }
+        String cor = prioridades.findByNome(chave).map(item -> item.getCor() == null ? "" : item.getCor()).orElse("");
+        if (cor.isEmpty() == false) {
+            return cor;
+        }
+        String maiuscula = chave.toUpperCase();
+        if (maiuscula.equals(chave)) {
+            return "";
+        }
+        return prioridades.findByNome(maiuscula).map(item -> item.getCor() == null ? "" : item.getCor()).orElse("");
     }
 
     public void validarPrioridade(Chamado chamado) {
