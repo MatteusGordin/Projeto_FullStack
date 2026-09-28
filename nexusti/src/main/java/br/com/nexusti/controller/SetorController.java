@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/setores")
-@CrossOrigin(origins = "*")
 public class SetorController {
 
     @Autowired

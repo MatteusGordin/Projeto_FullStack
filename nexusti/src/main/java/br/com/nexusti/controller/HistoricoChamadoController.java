@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/historicos")
-@CrossOrigin(origins = "*")
 public class HistoricoChamadoController {
 
     @Autowired

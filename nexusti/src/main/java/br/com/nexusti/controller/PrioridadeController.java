@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/prioridades")
-@CrossOrigin(origins = "*")
 public class PrioridadeController {
 
     @Autowired

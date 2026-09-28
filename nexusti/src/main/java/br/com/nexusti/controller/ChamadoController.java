@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chamados")
-@CrossOrigin(origins = "*")
 public class ChamadoController {
 
     @Autowired
