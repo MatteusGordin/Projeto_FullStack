@@ -17,7 +17,7 @@ public class CorsConfig {
     private String origensPermitidas;
 
     @Bean
-    public CorsConfigurationSource fonte() {
+    public CorsConfigurationSource corsConfigurationSource() {
         List<String> origens = Arrays.stream(origensPermitidas.split(","))
                 .map(String::trim)
                 .filter(valor -> !valor.isEmpty())
