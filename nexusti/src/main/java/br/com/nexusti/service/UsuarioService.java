@@ -34,9 +34,8 @@ public class UsuarioService {
             return "";
         }
         return autenticacao.getAuthorities().stream()
-                .map(papel -> papel.getAuthority() == null ? "" : papel.getAuthority().trim().toUpperCase())
-                .filter(papel -> papel.equals("ROLE_ADMIN") || papel.equals("ROLE_TECNICO") || papel.equals("ROLE_USUARIO"))
-                .map(papel -> papel.replace("ROLE_", ""))
+                .map(papel -> normalizarPapel(papel == null ? null : papel.getAuthority()))
+                .filter(papel -> papel.equals("ADMIN") || papel.equals("TECNICO") || papel.equals("USUARIO"))
                 .findFirst()
                 .orElse("");
     }
@@ -50,13 +49,22 @@ public class UsuarioService {
         if (nome.equals("anonymousUser")) {
             return true;
         }
-        return autenticacao.getAuthorities().stream().noneMatch(papel ->
-                papel.getAuthority().equals("ROLE_ADMIN") || papel.getAuthority().equals("ROLE_TECNICO"));
+        return autenticacao.getAuthorities().stream()
+                .map(papel -> normalizarPapel(papel == null ? null : papel.getAuthority()))
+                .noneMatch(papel -> papel.equals("ADMIN") || papel.equals("TECNICO"));
+    }
+
+    private String normalizarPapel(String autoridade) {
+        String valor = autoridade == null ? "" : autoridade.trim().toUpperCase();
+        if (valor.startsWith("ROLE_")) {
+            return valor.substring(5);
+        }
+        return valor;
     }
 
     public void validarGerenciamentoAdmin(String perfilAlvoAtual, String perfilDesejado) {
-        String alvoAtual = perfilAlvoAtual == null ? "" : perfilAlvoAtual.trim().toUpperCase();
-        String desejado = perfilDesejado == null ? "" : perfilDesejado.trim().toUpperCase();
+        String alvoAtual = normalizarPapel(perfilAlvoAtual);
+        String desejado = normalizarPapel(perfilDesejado);
         if (contextoAdministrativoAusente()) {
             return;
         }
