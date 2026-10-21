@@ -3,6 +3,8 @@
 Trabalho da disciplina de Desenvolvimento Full Stack: sistema de HelpDesk
 para manutenção de equipamentos de TI (backend Spring Boot + frontend React + PostgreSQL).
 
+Site: https://nexusti-frontend.vercel.app
+
 O código do projeto está na subpasta [`nexusti/`](nexusti/).
 
 ## Início rápido (clone e execução)
