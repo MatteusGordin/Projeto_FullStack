@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { lerPerfil } from "../auth";
+import { lerPerfil, cabecalho } from "../auth";
 
 const prioridadesPadrao = ["BAIXA", "MEDIA", "ALTA", "URGENTE"];
 
@@ -41,9 +41,9 @@ function AbrirChamado() {
         setPapel(papelAtual);
         const idLogado = dadosPerfil && dadosPerfil.id ? String(dadosPerfil.id) : "";
         const [respostaSetores, respostaEquipamentos, respostaPrioridades] = await Promise.all([
-          api.get("/setores/opcoes"),
-          api.get("/equipamentos/opcoes"),
-          api.get("/prioridades/opcoes")
+          api.get("/setores/opcoes", cabecalho()),
+          api.get("/equipamentos/opcoes", cabecalho()),
+          api.get("/prioridades/opcoes", cabecalho())
         ]);
         setSetores(extrairLista(respostaSetores.data));
         setEquipamentos(extrairLista(respostaEquipamentos.data));
@@ -56,7 +56,7 @@ function AbrirChamado() {
         const equipe = papelAtual === "ADMIN" || papelAtual === "TECNICO";
         if (equipe === true) {
           try {
-            const respostaUsuarios = await api.get("/usuarios", { params: { size: 200, sort: "nome" } });
+            const respostaUsuarios = await api.get("/usuarios", { params: { size: 200, sort: "nome" }, headers: cabecalho().headers });
             setSolicitantes(extrairLista(respostaUsuarios.data));
           } catch (falhaUsuarios) {
             setSolicitantes([]);
@@ -141,7 +141,7 @@ function AbrirChamado() {
       idEquipamento: equipamentoNumero
     };
     try {
-      await api.post("/chamados", dados);
+      await api.post("/chamados", dados, cabecalho());
       setMensagem("Chamado salvo com sucesso.");
       setTitulo("");
       setDescricao("");

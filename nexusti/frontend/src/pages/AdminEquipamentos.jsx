@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { cabecalho } from "../auth";
 
 function extrairLista(dados) {
   if (Array.isArray(dados)) {
@@ -30,8 +31,8 @@ function AdminEquipamentos() {
     setErro("");
     try {
       const [respostaEquipamentos, respostaSetores] = await Promise.all([
-        api.get("/equipamentos", { params: { size: 200, sort: "patrimonio" } }),
-        api.get("/setores/opcoes")
+        api.get("/equipamentos", { params: { size: 200, sort: "patrimonio" }, headers: cabecalho().headers }),
+        api.get("/setores/opcoes", cabecalho())
       ]);
       setEquipamentos(extrairLista(respostaEquipamentos.data));
       setSetores(extrairLista(respostaSetores.data));
@@ -86,10 +87,10 @@ function AdminEquipamentos() {
     try {
       const dados = { patrimonio: patrimonio.trim(), tipo: tipo.trim(), marca: marca.trim(), modelo: modelo.trim(), idSetor: setorNumero };
       if (idEdicao === null) {
-        await api.post("/equipamentos", dados);
+        await api.post("/equipamentos", dados, cabecalho());
         setMensagem("Equipamento criado com sucesso.");
       } else {
-        await api.put("/equipamentos/" + idEdicao, dados);
+        await api.put("/equipamentos/" + idEdicao, dados, cabecalho());
         setMensagem("Equipamento atualizado com sucesso.");
       }
       limpar();
@@ -113,7 +114,7 @@ function AdminEquipamentos() {
       return;
     }
     try {
-      await api.delete("/equipamentos/" + item.id);
+      await api.delete("/equipamentos/" + item.id, cabecalho());
       if (idEdicao === item.id) {
         limpar();
       }

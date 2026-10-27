@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { lerPerfil } from "../auth";
+import { lerPerfil, cabecalho } from "../auth";
 
 const todosPerfis = ["ADMIN", "TECNICO", "USUARIO"];
 
@@ -38,8 +38,8 @@ function AdminUsuarios() {
     setErro("");
     try {
       const [respostaUsuarios, respostaSetores, dadosPerfil] = await Promise.all([
-        api.get("/usuarios", { params: { size: 200, sort: "nome" } }),
-        api.get("/setores/opcoes"),
+        api.get("/usuarios", { params: { size: 200, sort: "nome" }, headers: cabecalho().headers }),
+        api.get("/setores/opcoes", cabecalho()),
         lerPerfil()
       ]);
       setUsuarios(extrairLista(respostaUsuarios.data));
@@ -125,10 +125,10 @@ function AdminUsuarios() {
       const dados = { nome: nome.trim(), email: email.trim(), senha: senha, perfil: perfil, idSetor: setorNumero, ativo: ativo };
       if (idEdicao === null) {
         dados.senha = senha.trim();
-        await api.post("/usuarios", dados);
+        await api.post("/usuarios", dados, cabecalho());
         setMensagem("Usuario criado com sucesso.");
       } else {
-        await api.put("/usuarios/" + idEdicao, dados);
+        await api.put("/usuarios/" + idEdicao, dados, cabecalho());
         setMensagem("Usuario atualizado com sucesso.");
       }
       limpar();
@@ -160,7 +160,7 @@ function AdminUsuarios() {
       return;
     }
     try {
-      await api.delete("/usuarios/" + item.id);
+      await api.delete("/usuarios/" + item.id, cabecalho());
       if (idEdicao === item.id) {
         limpar();
       }

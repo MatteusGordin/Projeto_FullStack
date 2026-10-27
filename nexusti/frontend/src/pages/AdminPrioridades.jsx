@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { cabecalho } from "../auth";
 
 const CORES = [
   { rotulo: "Vermelho", valor: "#EF4444" },
@@ -43,7 +44,7 @@ function AdminPrioridades() {
     setCarregando(true);
     setErro("");
     try {
-      const resposta = await api.get("/prioridades", { params: { size: 200, sort: "ordem,asc" } });
+      const resposta = await api.get("/prioridades", { params: { size: 200, sort: "ordem,asc" }, headers: cabecalho().headers });
       setPrioridades(extrairLista(resposta.data));
     } catch (falha) {
       setErro("Falha ao carregar prioridades. Tente novamente.");
@@ -103,10 +104,10 @@ function AdminPrioridades() {
     try {
       const dados = { nome: nome.trim(), cor: cor, ordem: ordemNumero, ativa: ativa };
       if (idEdicao === null) {
-        await api.post("/prioridades", dados);
+        await api.post("/prioridades", dados, cabecalho());
         setMensagem("Prioridade criada com sucesso.");
       } else {
-        await api.put("/prioridades/" + idEdicao, dados);
+        await api.put("/prioridades/" + idEdicao, dados, cabecalho());
         setMensagem("Prioridade atualizada com sucesso.");
       }
       limpar();
@@ -130,7 +131,7 @@ function AdminPrioridades() {
       return;
     }
     try {
-      await api.delete("/prioridades/" + item.id);
+      await api.delete("/prioridades/" + item.id, cabecalho());
       if (idEdicao === item.id) {
         limpar();
       }

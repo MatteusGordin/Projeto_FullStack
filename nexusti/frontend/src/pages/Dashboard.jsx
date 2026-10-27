@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { cabecalho } from "../auth";
 import { classeBadge } from "../prioridades";
 
 function formatarData(texto) {
@@ -38,8 +39,8 @@ function Dashboard() {
       setErroRecentes("");
       try {
         const [respostaMetricas, respostaPrioridades] = await Promise.all([
-          api.get("/chamados/metricas"),
-          api.get("/chamados/metricas/prioridades")
+          api.get("/chamados/metricas", cabecalho()),
+          api.get("/chamados/metricas/prioridades", cabecalho())
         ]);
         setMetricas(respostaMetricas.data);
         const dados = respostaPrioridades.data;
@@ -51,7 +52,7 @@ function Dashboard() {
         setCarregando(false);
       }
       try {
-        const respostaRecentes = await api.get("/chamados", { params: { sort: "dataAbertura,desc", size: 5 } });
+        const respostaRecentes = await api.get("/chamados", { params: { sort: "dataAbertura,desc", size: 5 }, headers: cabecalho().headers });
         const dadosRecentes = respostaRecentes.data;
         const listaRecentes = Array.isArray(dadosRecentes) ? dadosRecentes : Array.isArray(dadosRecentes.content) ? dadosRecentes.content : [];
         setRecentes(listaRecentes);

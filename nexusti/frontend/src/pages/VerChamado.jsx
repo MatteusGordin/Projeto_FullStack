@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
-import { lerPerfil } from "../auth";
+import { lerPerfil, cabecalho } from "../auth";
 import { classeBadge } from "../prioridades";
 
 function formatarData(texto) {
@@ -33,7 +33,7 @@ function VerChamado() {
       }
       try {
         const [resposta, dadosPerfil] = await Promise.all([
-          api.get("/chamados/" + idNormalizado),
+          api.get("/chamados/" + idNormalizado, cabecalho()),
           lerPerfil().catch(() => null)
         ]);
         if (resposta.data) {
@@ -72,7 +72,7 @@ function VerChamado() {
     setErro("");
     setMensagem("");
     try {
-      const resposta = await api.put("/chamados/" + String(id).trim() + "/concluir", { solucao: texto });
+      const resposta = await api.put("/chamados/" + String(id).trim() + "/concluir", { solucao: texto }, cabecalho());
       setChamado(resposta.data);
       setMensagem("Chamado concluido com sucesso.");
     } catch (falha) {

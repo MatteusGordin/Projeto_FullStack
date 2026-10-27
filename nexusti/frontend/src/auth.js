@@ -9,8 +9,16 @@ export function sair() {
   localStorage.removeItem("token");
 }
 
+export function cabecalho() {
+  const token = localStorage.getItem("token");
+  if (token === null || token === "") {
+    return { headers: {} };
+  }
+  return { headers: { Authorization: "Bearer " + token } };
+}
+
 export async function lerPerfil() {
-  const resposta = await api.get("/auth/perfil");
+  const resposta = await api.get("/auth/perfil", cabecalho());
   return resposta.data;
 }
 

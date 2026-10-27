@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { cabecalho } from "../auth";
 import { classeBadge } from "../prioridades";
 
 const ordenacoes = [
@@ -123,8 +124,8 @@ function ListarChamados() {
     async function carregarOpcoes() {
       try {
         const [respostaSetores, respostaPrioridades] = await Promise.all([
-          api.get("/setores/opcoes"),
-          api.get("/prioridades/opcoes")
+          api.get("/setores/opcoes", cabecalho()),
+          api.get("/prioridades/opcoes", cabecalho())
         ]);
         setSetores(extrairLista(respostaSetores.data));
         setPrioridades(extrairLista(respostaPrioridades.data));
@@ -157,7 +158,7 @@ function ListarChamados() {
             parametros[chave] = valor;
           }
         });
-        const resposta = await api.get("/chamados", { params: parametros });
+        const resposta = await api.get("/chamados", { params: parametros, headers: cabecalho().headers });
         const dados = resposta.data;
         const lista = Array.isArray(dados) ? dados : Array.isArray(dados.content) ? dados.content : [];
         setChamados(ordenarParaExibicao(lista, ordenacao));

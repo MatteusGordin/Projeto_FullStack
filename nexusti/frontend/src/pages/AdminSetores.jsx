@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { cabecalho } from "../auth";
 
 function extrairLista(dados) {
   if (Array.isArray(dados)) {
@@ -25,7 +26,7 @@ function AdminSetores() {
     setCarregando(true);
     setErro("");
     try {
-      const resposta = await api.get("/setores", { params: { size: 200, sort: "nome" } });
+      const resposta = await api.get("/setores", { params: { size: 200, sort: "nome" }, headers: cabecalho().headers });
       setSetores(extrairLista(resposta.data));
     } catch (falha) {
       setErro("Falha ao carregar setores. Tente novamente.");
@@ -67,10 +68,10 @@ function AdminSetores() {
     try {
       const dados = { nome: nome.trim(), sigla: sigla.trim() };
       if (idEdicao === null) {
-        await api.post("/setores", dados);
+        await api.post("/setores", dados, cabecalho());
         setMensagem("Setor criado com sucesso.");
       } else {
-        await api.put("/setores/" + idEdicao, dados);
+        await api.put("/setores/" + idEdicao, dados, cabecalho());
         setMensagem("Setor atualizado com sucesso.");
       }
       limpar();
@@ -94,7 +95,7 @@ function AdminSetores() {
       return;
     }
     try {
-      await api.delete("/setores/" + item.id);
+      await api.delete("/setores/" + item.id, cabecalho());
       if (idEdicao === item.id) {
         limpar();
       }

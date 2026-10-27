@@ -10,14 +10,6 @@ const api = axios.create({
   }
 });
 
-api.interceptors.request.use((configuracao) => {
-  const token = localStorage.getItem("token");
-  if (token !== null && token !== "") {
-    configuracao.headers.Authorization = "Bearer " + token;
-  }
-  return configuracao;
-});
-
 api.interceptors.response.use(
   (resposta) => resposta,
   (falha) => {
