@@ -28,3 +28,6 @@ build/
 dist/
 node_modules/
 frontend/dist/
+
+# Deploy artifacts
+*-deploy.zip
